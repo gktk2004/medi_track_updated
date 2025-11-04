@@ -1,0 +1,116 @@
+{% extends 'admin/admin_index.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: #f5f6fa;
+    color: #333;
+  }
+
+  .dashboard-title {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    text-align: center;
+    font-weight: 700;
+    color: #023e8a;
+  }
+
+  .card {
+    border: none;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    background: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .card img {
+    height: 180px;
+    object-fit: cover;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+  }
+
+  .btn-custom {
+    background-color: #0077b6;
+    border: none;
+    color: #fff;
+  }
+
+  .btn-custom:hover {
+    background-color: #023e8a;
+  }
+
+  footer {
+    background-color: #023e8a;
+    color: white;
+    padding: 15px 0;
+    text-align: center;
+    margin-top: 50px;
+    font-size: 14px;
+  }
+</style>
+
+<div class="container">
+  <h2 class="dashboard-title">Admin Dashboard</h2>
+
+  <div class="row">
+    <!-- Add Doctors -->
+    <div class="col-md-4 col-sm-6">
+      <div class="card text-center">
+        <img src="/static/images/8269362_3793084.jpg" alt="Doctors">
+        <div class="card-body">
+          <h5 class="card-title">Add Doctors</h5>
+          <p class="card-text">Add doctors.</p>
+          <a href="{% url 'add_doctor' %}" class="btn btn-custom w-100">Add Doctors</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Doctors -->
+    <div class="col-md-4 col-sm-6">
+      <div class="card text-center">
+        <img src="/static/images/13108103_5113931.jpg" alt="Departments">
+        <div class="card-body">
+          <h5 class="card-title">View Doctors</h5>
+          <p class="card-text">View and manage Doctors.</p>
+          <a href="{% url 'view_doctors' %}" class="btn btn-custom w-100">View Doctors</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Approved Doctor -->
+    <div class="col-md-4 col-sm-6">
+      <div class="card text-center">
+        <img src="https://cdn.pixabay.com/photo/2016/03/31/19/56/calendar-1297979_1280.png" alt="Schedule">
+        <div class="card-body">
+          <h5 class="card-title">View Approved Doctor</h5>
+          <p class="card-text">View Approved Doctor</p>
+          <a href="{% url 'view_approved_doctors' %}" class="btn btn-custom w-100">View Approved Doctor</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Rejected Doctor -->
+    <div class="col-md-4 col-sm-6">
+      <div class="card text-center">
+        <img src="https://cdn.pixabay.com/photo/2016/03/31/19/56/calendar-1297979_1280.png" alt="Schedule">
+        <div class="card-body">
+          <h5 class="card-title">View Rejected Doctor</h5>
+          <p class="card-text">View Rejected Doctor</p>
+          <a href="{% url 'view_rejected_doctors' %}" class="btn btn-custom w-100">View Rejected Doctor</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

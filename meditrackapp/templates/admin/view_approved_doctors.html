@@ -1,0 +1,170 @@
+{% extends 'admin/admin_index.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+  .dashboard-title {
+    text-align: center;
+    font-weight: 700;
+    color: #0077b6;
+    margin: 40px 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 30px;
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 119, 182, 0.1);
+  }
+
+  th, td {
+    padding: 12px 15px;
+    text-align: center;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: middle;
+  }
+
+  th {
+    background-color: #0077b6;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  tr:hover {
+    background-color: #f1f9ff;
+  }
+
+  .doctor-image, .id-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #0077b6;
+    box-shadow: 0 2px 4px rgba(0, 119, 182, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .doctor-image:hover, .id-image:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 119, 182, 0.3);
+  }
+
+  .working-days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  .day-badge {
+    background-color: #0077b6;
+    color: #fff;
+    font-size: 12px;
+    padding: 3px 7px;
+    border-radius: 8px;
+    text-transform: capitalize;
+  }
+
+  .btn-reject {
+    background-color: #d90429;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .btn-reject:hover {
+    background-color: #a1011d;
+  }
+
+</style>
+
+<div class="container">
+  <h2 class="dashboard-title">Approved Doctors</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Photo</th>
+        <th>ID Image</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Specialization</th>
+        <th>Qualification</th>
+        <th>Experience</th>
+        <th>Working Days</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for doctor in doctors %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+
+        <!-- Profile Photo -->
+        <td>
+          {% if doctor.image %}
+            <img src="{{ doctor.image.url }}" class="doctor-image" alt="{{ doctor.name }}">
+          {% else %}
+            <img src="{% static 'default-avatar.png' %}" class="doctor-image" alt="No Image">
+          {% endif %}
+        </td>
+
+        <!-- ID Image -->
+        <td>
+          {% if doctor.id_image %}
+            <img src="{{ doctor.id_image.url }}" class="id-image" alt="ID Image">
+          {% else %}
+            <img src="{% static 'default-id.png' %}" class="id-image" alt="No ID">
+          {% endif %}
+        </td>
+
+        <td>{{ doctor.name }}</td>
+        <td>{{ doctor.email }}</td>
+        <td>{{ doctor.phone_number }}</td>
+        <td>
+          {% if doctor.specialization %}
+            {{ doctor.specialization.department }}
+          {% else %}
+            N/A
+          {% endif %}
+        </td>
+        <td>{{ doctor.qualification|default:"N/A" }}</td>
+        <td>{{ doctor.experience|default:"N/A" }}</td>
+
+        <!-- Working Days -->
+        <td>
+          {% if doctor.working_days %}
+          <div class="working-days">
+            {% for day in doctor.working_days %}
+              <span class="day-badge">{{ day }}</span>
+            {% endfor %}
+          </div>
+          {% else %}
+            <span class="text-muted">Not Set</span>
+          {% endif %}
+        </td>
+
+        <!-- Reject Button -->
+        <td>
+          <a href="{% url 'reject_doctor' doctor.id %}" class="btn-reject">Reject</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="11" style="text-align:center; color: gray;">No approved doctors found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

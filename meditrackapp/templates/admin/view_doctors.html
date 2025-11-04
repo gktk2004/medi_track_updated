@@ -1,0 +1,189 @@
+{% extends 'admin/admin_index.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+  .dashboard-title {
+    text-align: center;
+    font-weight: 700;
+    color: #0077b6;
+    margin: 40px 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 30px;
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 119, 182, 0.1);
+  }
+
+  th, td {
+    padding: 12px 15px;
+    text-align: center;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: middle;
+  }
+
+  th {
+    background-color: #0077b6;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  tr:hover {
+    background-color: #f1f9ff;
+  }
+
+  .btn-approve {
+    background-color: #009e60;
+    color: #fff;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    transition: 0.2s ease;
+  }
+
+  .btn-approve:hover {
+    background-color: #007a4f;
+  }
+
+  .btn-reject {
+    background-color: #d90429;
+    color: #fff;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    transition: 0.2s ease;
+  }
+
+  .btn-reject:hover {
+    background-color: #a1011d;
+  }
+
+  .doctor-image, .id-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #0077b6;
+    box-shadow: 0 2px 4px rgba(0, 119, 182, 0.2);
+  }
+
+  .working-days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  .day-badge {
+    background-color: #0077b6;
+    color: #fff;
+    font-size: 12px;
+    padding: 3px 7px;
+    border-radius: 8px;
+    text-transform: capitalize;
+  }
+</style>
+
+<div class="container">
+  <h2 class="dashboard-title">View Doctors</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Photo</th>
+        <th>ID Image</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Specialization</th>
+        <th>Qualification</th>
+        <th>Experience</th>
+        <th>Working Days</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for doctor in doctors %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+
+        <!-- Profile Photo -->
+        <td>
+          {% if doctor.image %}
+            <img src="{{ doctor.image.url }}" class="doctor-image" alt="{{ doctor.name }}">
+          {% else %}
+            <img src="{% static 'default-avatar.png' %}" class="doctor-image" alt="No Image">
+          {% endif %}
+        </td>
+
+        <!-- ID Image -->
+        <td>
+          {% if doctor.id_image %}
+            <img src="{{ doctor.id_image.url }}" class="id-image" alt="ID Image">
+          {% else %}
+            <img src="{% static 'default-id.png' %}" class="id-image" alt="No ID">
+          {% endif %}
+        </td>
+
+        <td>{{ doctor.name }}</td>
+        <td>{{ doctor.email }}</td>
+        <td>{{ doctor.phone_number }}</td>
+        <td>
+          {% if doctor.specialization %}
+            {{ doctor.specialization.department }}
+          {% else %}
+            N/A
+          {% endif %}
+        </td>
+        <td>{{ doctor.qualification }}</td>
+        <td>{{ doctor.experience }}</td>
+
+        <!-- ✅ Working Days -->
+        <td>
+          {% if doctor.working_days %}
+          <div class="working-days">
+            {% for day in doctor.working_days %}
+              <span class="day-badge">{{ day }}</span>
+            {% endfor %}
+          </div>
+          {% else %}
+            <span class="text-muted">Not Set</span>
+          {% endif %}
+        </td>
+
+        <td>
+          {% if doctor.is_approved %}
+            <span style="color: green; font-weight: 600;">Approved</span>
+          {% else %}
+            <span style="color: orange; font-weight: 600;">Pending</span>
+          {% endif %}
+        </td>
+
+        <td>
+          {% if not doctor.is_approved %}
+            <a href="{% url 'approve_doctor' doctor.id %}" class="btn-approve">Approve</a>
+            <a href="{% url 'reject_doctor' doctor.id %}" class="btn-reject ms-2">Reject</a>
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="12" style="text-align:center; color: gray;">No doctors found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

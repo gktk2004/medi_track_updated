@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEDITRACK | Doctor Dashboard</title>
+
+  <!-- ✅ CDN Styles -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f5f6fa;
+      color: #333;
+    }
+
+    header {
+      background-color: #0077b6;
+      padding: 15px 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar-brand {
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .navbar-brand:hover {
+      color: #caf0f8;
+    }
+
+    .nav-link {
+      color: #fff !important;
+      font-weight: 500;
+    }
+
+    .nav-link:hover {
+      color: #caf0f8 !important;
+    }
+
+    .dashboard-title {
+      margin-top: 100px;
+      margin-bottom: 40px;
+      text-align: center;
+      font-weight: 700;
+      color: #023e8a;
+    }
+
+    .card {
+      border: none;
+      border-radius: 15px;
+      transition: all 0.3s ease;
+      background: #ffffff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .card img {
+      height: 180px;
+      object-fit: cover;
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+    }
+
+    footer {
+      background-color: #023e8a;
+      color: white;
+      padding: 15px 0;
+      text-align: center;
+      margin-top: 50px;
+      font-size: 14px;
+    }
+
+    .btn-custom {
+      background-color: #0077b6;
+      color: #ffffff;
+      border: none;
+    }
+
+    .btn-custom:hover {
+      background-color: #0077b6;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ✅ Header -->
+  <header>
+    <nav class="navbar navbar-expand-lg navbar-dark container">
+      <a class="navbar-brand" href="#">MEDITRACK</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link active" href="{% url 'doctor_index' %}">Home</a></li>
+          <!-- <li class="nav-item"><a class="nav-link" href="#">Profile</a></li> -->
+          <li class="nav-item"><a class="nav-link" href="#">Reports</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">Complaints</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'doctor_profile' %}">Profile</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Logout</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+  {% block content %}
+
+  <div class="container mt-3 d-flex justify-content-end">
+  <form action="" method="post">
+    {% csrf_token %}
+    {% if doctor.op_active %}
+      <button type="submit" class="btn btn-custom w-100">Close OP</button>
+    {% else %}
+      <button type="submit" class="btn btn-custom w-100"> Start OP</button>
+    {% endif %}
+  </form>
+</div>
+  <!-- ✅ Dashboard -->
+  <div class="container">
+    <h2 class="dashboard-title">Doctor Dashboard</h2>
+
+    <div class="row g-4">
+      <!-- Hospital Profile -->
+      <!-- <div class="col-md-4">
+        <div class="card text-center">
+          <img src="https://cdn.pixabay.com/photo/2016/11/29/05/08/architecture-1867768_1280.jpg" alt="Hospital">
+          <div class="card-body">
+            <h5 class="card-title">Hospital Profile</h5>
+            <p class="card-text">View & update hospital information.</p>
+            <a href="#" class="btn btn-custom w-100">Manage</a>
+          </div>
+        </div>
+      </div> -->
+
+      <!-- Doctors -->
+      <div class="col-md-4">
+        <div class="card text-center">
+          <img src="/static/images/8269362_379384.jpg" alt="Doctors">
+          <div class="card-body">
+            <h5 class="card-title">Upcoming Appointments</h5>
+            <p class="card-text">View your upcoming appointments with patients.</p>
+            <a href="{% url 'upcoming_appointments' %}" class="btn btn-custom w-100">View Appointments</a>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Scheduling -->
+      <div class="col-md-4">
+        <div class="card text-center">
+          <img src="https://cdn.pixabay.com/photo/2016/03/31/19/56/calendar-1297979_1280.png" alt="Schedule">
+          <div class="card-body">
+            <h5 class="card-title">Ongoing Appointments</h5>
+            <p class="card-text">Manage and update ongoing patient sessions.</p>
+            <a href="#" class="btn btn-custom w-100">Manage Appointments</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tokens -->
+      <div class="col-md-4">
+        <div class="card text-center">
+          <img src="https://cdn.pixabay.com/photo/2017/05/14/17/22/timer-2310793_1280.jpg" alt="Tokens">
+          <div class="card-body">
+            <h5 class="card-title">Patient Medical History</h5>
+            <p class="card-text">Access and update patient medical records.</p>
+            <a href="#" class="btn btn-custom w-100">View History</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reports -->
+      <div class="col-md-4">
+        <div class="card text-center">
+          <img src="https://cdn.pixabay.com/photo/2018/03/01/09/33/analysis-3194943_1280.jpg" alt="Reports">
+          <div class="card-body">
+            <h5 class="card-title">Digital Prescriptions</h5>
+            <p class="card-text">Issue prescriptions digitally to patients.</p>
+            <a href="#" class="btn btn-custom w-100">Manage Prescriptions</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Send Delay Notifications -->
+      <div class="col-md-4">
+        <div class="card text-center">
+          <img src="https://cdn.pixabay.com/photo/2018/03/01/09/33/analysis-3194943_1280.jpg" alt="Reports">
+          <div class="card-body">
+            <h5 class="card-title">Send Delay Notifications</h5>
+            <p class="card-text">Notify patients about delays in appointments.</p>
+            <a href="#" class="btn btn-custom w-100">Send Notification</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Patient Feedback -->
+      <div class="col-md-4">
+        <div class="card text-center">
+          <img src="https://cdn.pixabay.com/photo/2018/03/01/09/33/analysis-3194943_1280.jpg" alt="Reports">
+          <div class="card-body">
+            <h5 class="card-title">Patient Feedback</h5>
+            <p class="card-text">View and respond to patient feedback or complaints.</p>
+            <a href="#" class="btn btn-custom w-100">View Feedback</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+  <!-- ✅ Footer -->
+  <footer>
+    © 2025 Meditrack | All Rights Reserved
+  </footer>
+
+  <!-- ✅ Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
