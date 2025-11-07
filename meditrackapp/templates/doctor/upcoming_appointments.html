@@ -1,79 +1,96 @@
 {% extends 'doctor/doctor_index.html' %}
 {% block content %}
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f7f7f7;
-    }
 
-    h2 {
-      color: #0077b6;
-      text-align: center;
-      margin-top: 30px;
-    }
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f7f9fc;
+  }
 
-    table {
-      width: 80%;
-      margin: 30px auto;
-      border-collapse: collapse;
-      background-color: #fff;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
+  h2 {
+    color: #0077b6;
+    text-align: center;
+    margin: 30px 0;
+    font-weight: 700;
+  }
 
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
+  table {
+    width: 90%;
+    margin: 0 auto 40px;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+  }
 
-    th {
-      background-color: #0077b6;
-      color: white;
-    }
+  th, td {
+    padding: 14px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
 
-    tr:hover {
-      background-color: #f1f1f1;
-    }
+  th {
+    background-color: #0077b6;
+    color: white;
+    font-weight: 600;
+  }
 
-    p {
-      text-align: center;
-      color: #555;
-      margin-top: 20px;
-    }
-  </style>
-</head>
-<body>
-  <h2>Upcoming Appointments</h2>
+  tr:hover {
+    background-color: #f1f9ff;
+  }
 
-  {% if appointments %}
-    <table>
-      <thead>
-        <tr>
-          <th>User</th>
-          <th>Date</th>
-          <th>Symptoms</th>
-          <th>Token Number</th>
-          <th>Action
-            
-          </th>
-          <!-- <th>Status</th> -->
-        </tr>
-      </thead>
-      <tbody>
-        {% for appointment in appointments %}
-        <tr>
-          <td>{{ appointment.user.username }}</td>
-          <td>{{ appointment.date }}</td>
-          <td>{{ appointment.symptoms|default:"—" }}</td>
-          <td>{{ appointment.token_number|default:"N/A" }}</td>
-          <!-- <td>{{ appointment.status }}</td> -->
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p>No upcoming appointments found.</p>
-  {% endif %}<br><br><br><br><br><br><br><br><br><br><br><br><br>   
+  .btn-prescribe {
+    background-color: #0077b6;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.3s;
+  }
+
+  .btn-prescribe:hover {
+    background-color: #005f8a;
+  }
+
+  p {
+    text-align: center;
+    color: #555;
+    margin-top: 30px;
+  }
+</style>
+
+<h2>Upcoming Appointments for Dr. {{ doctor.name }}</h2>
+
+{% if appointments %}
+  <table>
+    <thead>
+      <tr>
+        <th>Patient</th>
+        <th>Date</th>
+        <th>Symptoms</th>
+        <th>Token Number</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for appointment in appointments %}
+      <tr>
+        <td>{{ appointment.user.username }}</td>
+        <td>{{ appointment.date }}</td>
+        <td>{{ appointment.symptoms|default:"—" }}</td>
+        <td>{{ appointment.token_number|default:"N/A" }}</td>
+        <td>
+          <a href="{% url 'add_prescription' appointment.id %}" class="btn-prescribe"> Prescribe</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>No upcoming appointments found.</p>
+{% endif %}
+
 {% endblock %}

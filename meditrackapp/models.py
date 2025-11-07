@@ -11,7 +11,6 @@ class Department(models.Model):
     department = models.CharField(max_length=150)
     
 
-
 from multiselectfield import MultiSelectField
 class Doctor(models.Model):
     DAYS_OF_WEEK = [

@@ -464,3 +464,275 @@ class CancelAppointmentView(APIView):
             "success": True,
             "message": f"Appointment #{appointment.id} has been cancelled successfully."
         }, status=status.HTTP_200_OK)        
+        
+        
+class UserPrescriptionsView(APIView):
+    def get(self, request, *args, **kwargs):
+        user_id = request.query_params.get('user_id')
+
+        # ✅ Validate input
+        if not user_id:
+            return Response(
+                {"success": False, "message": "user_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Fetch prescriptions linked to this user's appointments
+        prescriptions = Prescription.objects.filter(
+            appointment__user_id=user_id
+        ).select_related('appointment__doctor').prefetch_related('medicines')
+
+        if not prescriptions.exists():
+            return Response({
+                "success": True,
+                "user_id": user_id,
+                "prescriptions": []
+            })
+
+        serializer = PrescriptionSerializer(prescriptions, many=True)
+
+        return Response({
+            "success": True,
+            "user_id": user_id,
+            "prescriptions": serializer.data
+        }, status=status.HTTP_200_OK)
+        
+        
+class PrescriptionDetailView(APIView):
+     def get(self, request):
+        # ✅ Get prescription_id from query params
+        prescription_id = request.query_params.get('prescription_id')
+
+        if not prescription_id:
+            return Response(
+                {"error": "prescription_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Get prescription or return 404
+        prescription = get_object_or_404(Prescription, id=prescription_id)
+
+        appointment = prescription.appointment
+        doctor = appointment.doctor
+        user = appointment.user
+
+        # ✅ Medicines for this prescription
+        medicines = Medicine.objects.filter(prescription=prescription)
+        medicines_data = [
+            {
+                "id": med.id,
+                "name": med.name,
+                "dosage": med.dosage,
+                "frequency": med.frequency,
+                "time_of_day": med.time_of_day,
+                "food_instruction": med.food_instruction,
+                "number_of_days": med.number_of_days,
+            }
+            for med in medicines
+        ]
+
+        # ✅ Structured response
+        data = {
+            "prescription_id": prescription.id,
+            "symptoms": prescription.symptoms,
+            "notes": prescription.notes,
+            "appointment": {
+                "id": appointment.id,
+                "date": appointment.date,
+                "status": appointment.status,
+                "token_number": appointment.token_number,
+            },
+            "doctor": {
+                "id": doctor.id,
+                "name": doctor.name,
+                "email": doctor.email,
+                "specialization": (
+                    doctor.specialization.department if doctor.specialization else "General"
+                ),
+            },
+            "patient": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "phone_number": getattr(user, "phone_number", ""),
+            },
+            "medicines": medicines_data,
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+    
+    
+
+class SubmitFeedbackView(APIView):
+    """
+    POST - Submit feedback for an appointment
+    Params:
+        appointment_id (int)
+        star_rating (int)
+        doctor_interaction_rating (float)
+        hospital_service_rating (float)
+        comments (optional)
+    """
+
+    def post(self, request):
+        appointment_id = request.data.get('appointment_id')
+        star_rating = request.data.get('star_rating')
+        doctor_interaction = request.data.get('doctor_interaction_rating')
+        hospital_service = request.data.get('hospital_service_rating')
+        comments = request.data.get('comments', '')
+
+        # ✅ Validate required fields
+        if not appointment_id or not star_rating or not doctor_interaction or not hospital_service:
+            return Response(
+                {"error": "Missing required fields."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Check appointment
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+
+        # ✅ Prevent duplicate feedback
+        if hasattr(appointment, 'feedback'):
+            return Response(
+                {"message": "Feedback already submitted for this appointment."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Save feedback
+        feedback = Feedback.objects.create(
+            appointment=appointment,
+            star_rating=int(star_rating),
+            doctor_interaction_rating=float(doctor_interaction),
+            hospital_service_rating=float(hospital_service),
+            comments=comments,
+        )
+
+        return Response({
+            "success": True,
+            "message": "Feedback submitted successfully.",
+            "data": {
+                "feedback_id": feedback.id,
+                "appointment_id": appointment.id,
+                "star_rating": feedback.star_rating,
+                "doctor_interaction_rating": feedback.doctor_interaction_rating,
+                "hospital_service_rating": feedback.hospital_service_rating,
+                "comments": feedback.comments,
+            }
+        }, status=status.HTTP_201_CREATED)
+        
+        
+class FeedbackListView(APIView):
+    """
+    GET - List all feedback submitted by a specific user (patient)
+    Params:
+        user_id (required)
+    Response:
+        List of feedback with doctor & appointment details
+    """
+
+    def get(self, request):
+        user_id = request.query_params.get('user_id')
+
+        # ✅ Validate param
+        if not user_id:
+            return Response(
+                {"error": "user_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Get all feedbacks for appointments of this user
+        feedbacks = Feedback.objects.filter(appointment__user_id=user_id).select_related(
+            'appointment__doctor'
+        ).order_by('-created_at')
+
+        if not feedbacks.exists():
+            return Response({"message": "No feedback found for this user."}, status=status.HTTP_200_OK)
+
+        # ✅ Prepare structured response
+        feedback_list = []
+        for fb in feedbacks:
+            appointment = fb.appointment
+            doctor = appointment.doctor
+
+            feedback_list.append({
+                "feedback_id": fb.id,
+                "appointment_id": appointment.id,
+                "appointment_date": appointment.date,
+                "doctor": {
+                    "id": doctor.id,
+                    "name": doctor.name,
+                    "specialization": (
+                        doctor.specialization.department if doctor.specialization else "General"
+                    ),
+                    "email": doctor.email,
+                },
+                "star_rating": fb.star_rating,
+                "doctor_interaction_rating": fb.doctor_interaction_rating,
+                "hospital_service_rating": fb.hospital_service_rating,
+                "comments": fb.comments,
+                "submitted_on": fb.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            })
+
+        return Response({
+            "user_id": user_id,
+            "feedback_count": len(feedback_list),
+            "feedback": feedback_list
+        }, status=status.HTTP_200_OK)
+        
+        
+class FeedbackDetailView(APIView):
+    """
+    GET - Retrieve detailed information about a specific feedback entry.
+    Params:
+        feedback_id (required)
+    Response:
+        Appointment details + feedback details
+    """
+
+    def get(self, request):
+        # ✅ Get feedback_id from query params
+        feedback_id = request.query_params.get('feedback_id')
+
+        if not feedback_id:
+            return Response(
+                {"error": "feedback_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Fetch feedback object
+        feedback = get_object_or_404(Feedback, id=feedback_id)
+        appointment = feedback.appointment
+        doctor = appointment.doctor
+        user = appointment.user
+
+        # ✅ Build structured response
+        data = {
+            "feedback_id": feedback.id,
+            "appointment": {
+                "id": appointment.id,
+                "date": appointment.date,
+                "status": appointment.status,
+                "token_number": appointment.token_number,
+                "doctor": {
+                    "id": doctor.id,
+                    "name": doctor.name,
+                    "specialization": doctor.specialization.department if doctor.specialization else "General",
+                    "email": doctor.email
+                },
+                "patient": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "phone_number": getattr(user, "phone_number", ""),
+                },
+            },
+            "feedback": {
+                "star_rating": feedback.star_rating,
+                "doctor_interaction_rating": feedback.doctor_interaction_rating,
+                "hospital_service_rating": feedback.hospital_service_rating,
+                "comments": feedback.comments,
+                "submitted_on": feedback.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        }
+
+        return Response(data, status=status.HTTP_200_OK)

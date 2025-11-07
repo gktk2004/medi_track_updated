@@ -51,4 +51,9 @@ urlpatterns = [
     path('appointments/', UserAppointmentListView.as_view(), name='user-appointments'),
     path('appointment_details/', AppointmentDetailView.as_view(), name='appointment-detail'),
     path('cancel_appointment/', CancelAppointmentView.as_view(), name='cancel-appointment'),
+    path('prescriptions/', UserPrescriptionsView.as_view(), name='user_prescriptions'),
+    path('prescription_details/', PrescriptionDetailView.as_view(), name='prescription_details'),
+    path('submit_feedback/', SubmitFeedbackView.as_view(), name='submit_feedback'),
+    path('feedback_list/', FeedbackListView.as_view(), name='feedback_list'),
+    path('feedback_details/', FeedbackDetailView.as_view(), name='feedback_details'),
 ]

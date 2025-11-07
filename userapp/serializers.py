@@ -92,3 +92,24 @@ class AppointmentDetailSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
+        
+        
+class MedicineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Medicine
+        fields = [
+            "name", "dosage", "frequency", "time_of_day",
+            "food_instruction", "number_of_days"
+        ]
+
+class PrescriptionSerializer(serializers.ModelSerializer):
+    doctor_name = serializers.CharField(source='appointment.doctor.name', read_only=True)
+    appointment_date = serializers.DateField(source='appointment.date', read_only=True)
+    medicines = MedicineSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Prescription
+        fields = [
+            "id", "doctor_name", "appointment_date",
+            "symptoms", "notes", "created_at", "medicines"
+        ]

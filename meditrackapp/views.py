@@ -10,6 +10,12 @@ from django.db.models import Sum, Count
 from django.template.loader import get_template
 from django.http import HttpResponse
 from xhtml2pdf import pisa
+from datetime import datetime, timedelta
+from django.conf import settings
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
 from django.shortcuts import render
 
 
@@ -107,7 +113,15 @@ def view_doctors(request):
 
 
 def doctor_index(request):
-    return render(request,'doctor/doctor_index.html')
+    # assuming doctor logs in and their id is stored in session
+    doctor_id = request.session.get('doctor_id')
+
+    if not doctor_id:
+        return redirect('login')  # redirect if no doctor logged in
+
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+
+    return render(request, 'doctor/doctor_index.html', {'doctor': doctor})
 
 
 def doctor_profile(request):
@@ -175,12 +189,153 @@ def view_rejected_doctors(request):
 from django.utils import timezone
 from datetime import datetime
 def doctor_upcoming_appointments(request):
-    today = timezone.now().date()  # ✅ this works correctly
+    today = timezone.now().date()
+
+    # ✅ Get the logged-in doctor's ID (from session or request.user)
+    doctor_id = request.session.get('doctor_id')  # assuming you store this after login
+
+    if not doctor_id:
+        return redirect('login')  # or handle unauthorized access
+
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+
+    # ✅ Filter only this doctor's appointments
     appointments = Appointment.objects.filter(
+        doctor=doctor,
         status='upcoming',
         date__gte=today
     ).order_by('date', 'token_number')
 
     return render(request, 'doctor/upcoming_appointments.html', {
-        'appointments': appointments
+        'appointments': appointments,
+        'doctor': doctor
+    })
+
+
+def start_op(request, doctor_id):
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    today = datetime.today().date()
+
+    if request.method == "POST":
+        # Toggle OP status
+        if doctor.op_active:
+            doctor.op_active = False
+            doctor.save()
+            messages.success(request, "OP closed successfully.")
+            return redirect("doctor_index")
+
+        # Start OP
+        doctor.op_active = True
+        doctor.save()
+
+        # Get all today's upcoming appointments
+        appointments = Appointment.objects.filter(
+            doctor=doctor, date=today, status="upcoming"
+        ).order_by("created_at")
+
+        if not appointments.exists():
+            messages.warning(request, "No upcoming appointments found for today.")
+            return redirect("doctor_index")
+
+        # Add a 15-minute buffer for first token
+        BUFFER_MINUTES = 15
+        start_time = datetime.now() + timedelta(minutes=BUFFER_MINUTES)
+
+        for i, appointment in enumerate(appointments, start=1):
+            appointment.token_number = i
+            appointment.save(update_fields=["token_number"])
+
+            expected_time = (start_time + timedelta(minutes=(i - 1) * 10)).time()
+
+            # Build context for HTML email
+            context = {
+                "user": appointment.user,
+                "doctor": doctor,
+                "appointment": appointment,
+                "expected_time": expected_time.strftime("%I:%M %p"),
+                "token_number": i,
+            }
+
+            # Subject and content
+            subject = "🩺 Your Appointment Schedule for Today"
+            text_content = (
+                f"Dear {appointment.user.username},\n"
+                f"Your appointment with Dr. {doctor.name} is scheduled for today.\n"
+                f"Token Number: {i}\n"
+                f"Expected Time: {expected_time.strftime('%I:%M %p')}\n"
+                f"Please arrive on time.\n\n"
+                f"Thank you,\nMediTrack Team"
+            )
+
+            html_content = render_to_string("doctor/appointment_mail.html", context)
+
+            # Send the email
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[appointment.user.email],
+            )
+            email.attach_alternative(html_content, "text/html")
+
+            try:
+                email.send(fail_silently=False)
+            except Exception as e:
+                print("❌ Email sending failed:", e)
+
+        messages.success(request, "✅ OP started and emails sent to all booked users.")
+        return redirect("doctor_index")
+
+    return redirect("doctor_index")
+
+
+def add_prescription(request, appointment_id):
+    # ✅ Get appointment record
+    appointment = get_object_or_404(Appointment, id=appointment_id)
+
+    if request.method == "POST":
+        # ✅ Extract main form data
+        symptoms = request.POST.get('symptoms')
+        notes = request.POST.get('notes')
+
+        # ✅ Create the Prescription record
+        prescription = Prescription.objects.create(
+            appointment=appointment,
+            symptoms=symptoms,
+            notes=notes,
+        )
+
+        # ✅ Collect all medicines fields
+        med_names = request.POST.getlist('medicine_name')
+        dosages = request.POST.getlist('dosage')
+        frequencies = request.POST.getlist('frequency')
+        food_instructions = request.POST.getlist('food_instruction')
+        days = request.POST.getlist('number_of_days')
+
+        # ✅ Loop through medicines dynamically
+        for i in range(len(med_names)):
+            # Fetch time_of_day for this medicine only
+            times = request.POST.getlist(f'time_of_day_{i+1}')
+
+            # ✅ Create each Medicine record
+            Medicine.objects.create(
+                prescription=prescription,
+                name=med_names[i],
+                dosage=dosages[i],
+                frequency=frequencies[i],
+                time_of_day=times,  # MultiSelectField accepts list
+                food_instruction=food_instructions[i],
+                number_of_days=days[i],
+            )
+
+        # ✅ Update appointment status
+        appointment.status = "completed"
+        appointment.save()
+
+        messages.success(request, "Prescription added successfully!")
+        return redirect("upcoming_appointments")
+
+    # ✅ GET request — render form
+    return render(request, "doctor/add_prescription.html", {
+        "appointment": appointment
     })

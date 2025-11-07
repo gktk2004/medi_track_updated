@@ -114,15 +114,16 @@
   {% block content %}
 
   <div class="container mt-3 d-flex justify-content-end">
-  <form action="" method="post">
-    {% csrf_token %}
-    {% if doctor.op_active %}
-      <button type="submit" class="btn btn-custom w-100">Close OP</button>
-    {% else %}
-      <button type="submit" class="btn btn-custom w-100"> Start OP</button>
-    {% endif %}
-  </form>
-</div>
+    <form action="{% url 'start_op' doctor.id %}" method="post">
+      {% csrf_token %}
+      {% if doctor.op_active %}
+        <button type="submit" class="btn btn-danger w-100">Close OP</button>
+      {% else %}
+        <button type="submit" class="btn btn-success w-100">Start OP</button>
+      {% endif %}
+    </form>
+  </div>
+
   <!-- ✅ Dashboard -->
   <div class="container">
     <h2 class="dashboard-title">Doctor Dashboard</h2>

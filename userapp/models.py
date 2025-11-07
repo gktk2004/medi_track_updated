@@ -62,3 +62,17 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment for Appointment {self.appointment.id}"
+
+
+class Feedback(models.Model):
+    appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE, related_name='feedback')
+    star_rating = models.IntegerField()
+    doctor_interaction_rating = models.FloatField()
+    hospital_service_rating = models.FloatField()
+    comments = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Feedback for Appointment #{self.appointment.id} ({self.star_rating} ⭐)"
+
+

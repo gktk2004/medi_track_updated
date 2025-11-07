@@ -19,4 +19,6 @@ urlpatterns = [
     path('view_approved_doctors/', views.view_approved_doctors, name='view_approved_doctors'),
     path('view_rejected_doctors/', views.view_rejected_doctors, name='view_rejected_doctors'),
     path('upcoming_appointments/', views.doctor_upcoming_appointments, name='upcoming_appointments'),
+    path('start-op/<int:doctor_id>/', views.start_op, name='start_op'),
+    path('prescription/<int:appointment_id>/', views.add_prescription, name='add_prescription'),
 ]
