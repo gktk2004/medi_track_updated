@@ -339,3 +339,65 @@ def add_prescription(request, appointment_id):
     return render(request, "doctor/add_prescription.html", {
         "appointment": appointment
     })
+    
+    
+def doctor_patients_view(request, doctor_id):
+    """
+    Doctor can view and search their patients' completed appointment medical history.
+    """
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    search_query = request.GET.get('search', '').strip()
+
+    # ✅ Filter only completed appointments
+    appointments = (
+        Appointment.objects.filter(doctor=doctor, status='completed')
+        .select_related('user')
+        .prefetch_related('prescription__medicines')
+        .order_by('-date')
+    )
+
+    # ✅ Apply search filter (by patient name, email, or phone)
+    if search_query:
+        appointments = appointments.filter(
+            Q(user__username__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(user__phone__icontains=search_query)
+        )
+
+    # ✅ Group data by patient
+    patient_data = {}
+    for appointment in appointments:
+        patient = appointment.user
+        if patient not in patient_data:
+            patient_data[patient] = []
+        prescription = getattr(appointment, 'prescription', None)
+        patient_data[patient].append({
+            'appointment': appointment,
+            'prescription': prescription,
+            'medicines': prescription.medicines.all() if prescription else [],
+        })
+
+    # ✅ Remove patients without any completed appointments
+    patient_data = {p: r for p, r in patient_data.items() if r}
+
+    return render(request, 'doctor/doctor_patients.html', {
+        'doctor': doctor,
+        'patient_data': patient_data,
+        'search_query': search_query,
+    })
+    
+    
+def doctor_feedback_view(request, doctor_id):
+    """
+    Display all feedbacks given to a specific doctor
+    (based on appointments linked to that doctor).
+    """
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+
+    # ✅ Filter feedbacks by appointment's doctor
+    feedback_list = Feedback.objects.filter(appointment__doctor=doctor).select_related('appointment__user')
+
+    return render(request, 'doctor/doctor_feedback.html', {
+        'doctor': doctor,
+        'feedback_list': feedback_list,
+    })

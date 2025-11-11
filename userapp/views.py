@@ -736,3 +736,48 @@ class FeedbackDetailView(APIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+    
+class BookingConfirmationView(APIView):
+    """
+    GET - Fetch appointment details for booking confirmation screen
+    Params:
+        appointment_id (required)
+    Response:
+        Token number, doctor name, department name, date, expected time
+    """
+
+    def get(self, request):
+        # ✅ Get appointment ID from params
+        appointment_id = request.query_params.get('appointment_id')
+
+        if not appointment_id:
+            return Response(
+                {"error": "appointment_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Fetch appointment
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+        doctor = appointment.doctor
+
+        # ✅ Calculate expected time (same logic used in your mail)
+        BUFFER_MINUTES = 15
+        token_time_minutes = (appointment.token_number - 1) * 10
+        start_time = datetime.strptime("09:00", "%H:%M")  # Assuming OP starts at 9 AM
+        expected_time = (
+            start_time + timedelta(minutes=BUFFER_MINUTES + token_time_minutes)
+        ).strftime("%I:%M %p")
+
+        # ✅ Prepare response data
+        data = {
+            "appointment_id": appointment.id,
+            "token_number": appointment.token_number,
+            "doctor_name": doctor.name,
+            "department_name": (
+                doctor.specialization.department if doctor.specialization else "General"
+            ),
+            "date": appointment.date.strftime("%Y-%m-%d"),
+            "expected_time": expected_time,
+        }
+
+        return Response(data, status=status.HTTP_200_OK)

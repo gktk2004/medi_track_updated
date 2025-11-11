@@ -56,4 +56,5 @@ urlpatterns = [
     path('submit_feedback/', SubmitFeedbackView.as_view(), name='submit_feedback'),
     path('feedback_list/', FeedbackListView.as_view(), name='feedback_list'),
     path('feedback_details/', FeedbackDetailView.as_view(), name='feedback_details'),
+    path('appointment_confirmation/', BookingConfirmationView.as_view(), name='booking_confirmation'),
 ]
