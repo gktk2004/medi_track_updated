@@ -55,12 +55,13 @@ class AppointmentSerializer(serializers.ModelSerializer):
         
 class AppointmentListSerializer(serializers.ModelSerializer):
     doctor_name = serializers.CharField(source='doctor.name', read_only=True)
-
+    department_name = serializers.CharField(source='doctor.specialization.department', read_only=True)
     class Meta:
         model = Appointment
         fields = [
             'id',
             'doctor_name',
+            'department_name',
             'date',
             'token_number',
             'symptoms',
@@ -73,6 +74,7 @@ class AppointmentListSerializer(serializers.ModelSerializer):
 
 
 class AppointmentDetailSerializer(serializers.ModelSerializer):
+    doctor_id = serializers.IntegerField(source='doctor.id', read_only=True)
     doctor_name = serializers.CharField(source='doctor.name', read_only=True)
     doctor_image= serializers.ImageField(source='doctor.image',read_only=True)
     department_name = serializers.CharField(source='doctor.specialization.department', read_only=True)
@@ -82,6 +84,7 @@ class AppointmentDetailSerializer(serializers.ModelSerializer):
         model = Appointment
         fields = [
             'id',
+            'doctor_id',
             'user_name',
             'doctor_name',
             'doctor_image',

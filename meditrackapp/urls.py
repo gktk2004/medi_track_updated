@@ -18,7 +18,7 @@ urlpatterns = [
     path('reject-doctor/<int:doctor_id>/', views.reject_doctor, name='reject_doctor'),
     path('view_approved_doctors/', views.view_approved_doctors, name='view_approved_doctors'),
     path('view_rejected_doctors/', views.view_rejected_doctors, name='view_rejected_doctors'),
-    path('upcoming_appointments/', views.doctor_upcoming_appointments, name='upcoming_appointments'),
+    path('ongoing_appointments/', views.doctor_ongoing_appointments, name='ongoing_appointments'),
     path('start-op/<int:doctor_id>/', views.start_op, name='start_op'),
     path('prescription/<int:appointment_id>/', views.add_prescription, name='add_prescription'),
     path('doctor/<int:doctor_id>/patients/', views.doctor_patients_view, name='doctor_patients'),
@@ -35,5 +35,6 @@ urlpatterns = [
     path('admin/blood-request/reject/<int:req_id>/', views.admin_reject_blood_request, name='admin_reject_blood_request'),
     path('admin/blood-request/<int:req_id>/accepted/', views.admin_view_accepted_donors,name='admin_view_accepted_donors'),
     path('admin/donation-complete/<int:accept_id>/',views.admin_complete_donation,name='admin_complete_donation'),
-    
+    path("doctor/<int:doctor_id>/appointment-history/", views.doctor_appointment_history, name="doctor_appointment_history"),
+    path("doctor/<int:doctor_id>/upcoming/",views.upcoming_appointments,name="upcoming_appointments")
 ]

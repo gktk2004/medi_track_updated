@@ -206,7 +206,7 @@ from datetime import datetime
 #     })
 
 
-def doctor_upcoming_appointments(request):
+def doctor_ongoing_appointments(request):
     # Use localdate() so timezone settings are respected
     today = timezone.localdate()
 
@@ -224,10 +224,83 @@ def doctor_upcoming_appointments(request):
         date__exact=today
     ).order_by('date', 'token_number')
 
-    return render(request, 'doctor/upcoming_appointments.html', {
+    return render(request, 'doctor/ongoing_appointments.html', {
         'appointments': appointments,
         'doctor': doctor,
         'today': today
+    })
+
+
+def doctor_appointment_history(request, doctor_id):
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+
+    search = request.GET.get("search", "").strip()
+    date = request.GET.get("date", "").strip()
+    status = request.GET.get("status", "").strip()  # completed, cancelled, rescheduled
+
+    # Only show meaningful past appointments
+    allowed_status = ["completed", "cancelled", "rescheduled"]
+
+    appointments = Appointment.objects.filter(
+        doctor=doctor,
+        status__in=allowed_status
+    ).select_related("user")
+
+    # Search filter (patient name / email / phone)
+    if search:
+        appointments = appointments.filter(
+            Q(user__username__icontains=search) |
+            Q(user__email__icontains=search) |
+            Q(user__phone__icontains=search)
+        )
+
+    # Date filter
+    if date:
+        appointments = appointments.filter(date=date)
+
+    # Status filter
+    if status:
+        appointments = appointments.filter(status=status)
+
+    # Order newest → oldest
+    appointments = appointments.order_by("-date", "-id")
+
+    return render(request, "doctor/doctor_appointment_history.html", {
+        "doctor": doctor,
+        "appointments": appointments,
+    })
+
+def upcoming_appointments(request, doctor_id):
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+
+    # Get filters
+    search = request.GET.get("search", "").strip()
+    date = request.GET.get("date", "").strip()
+
+    # Base Query: Only upcoming appointments
+    appointments = Appointment.objects.filter(
+        doctor=doctor,
+        status="upcoming"
+    ).select_related("user")
+
+    # Search filter (patient name, email, phone)
+    if search:
+        appointments = appointments.filter(
+            Q(user__username__icontains=search) |
+            Q(user__email__icontains=search) |
+            Q(user__phone__icontains=search)
+        )
+
+    # Date filter
+    if date:
+        appointments = appointments.filter(date=date)
+
+    # Order by date and token_number
+    appointments = appointments.order_by("date", "token_number")
+
+    return render(request, "doctor/doctor_upcoming_appointments.html", {
+        "doctor": doctor,
+        "appointments": appointments,
     })
 
 def start_op(request, doctor_id):
@@ -359,52 +432,106 @@ def add_prescription(request, appointment_id):
     })
     
     
-def doctor_patients_view(request, doctor_id):
-    """
-    Doctor can view and search their patients' completed appointment medical history.
-    """
-    doctor = get_object_or_404(Doctor, id=doctor_id)
-    search_query = request.GET.get('search', '').strip()
+# def doctor_patients_view(request, doctor_id):
+#     """
+#     Doctor can view and search their patients' completed appointment medical history.
+#     """
+#     doctor = get_object_or_404(Doctor, id=doctor_id)
+#     search_query = request.GET.get('search', '').strip()
 
-    # ✅ Filter only completed appointments
+#     # ✅ Filter only completed appointments
+#     appointments = (
+#         Appointment.objects.filter(doctor=doctor, status='completed')
+#         .select_related('user')
+#         .prefetch_related('prescription__medicines')
+#         .order_by('-date')
+#     )
+
+#     # ✅ Apply search filter (by patient name, email, or phone)
+#     if search_query:
+#         appointments = appointments.filter(
+#             Q(user__username__icontains=search_query) |
+#             Q(user__email__icontains=search_query) |
+#             Q(user__phone__icontains=search_query)
+#         )
+
+#     # ✅ Group data by patient
+#     patient_data = {}
+#     for appointment in appointments:
+#         patient = appointment.user
+#         if patient not in patient_data:
+#             patient_data[patient] = []
+#         prescription = getattr(appointment, 'prescription', None)
+#         patient_data[patient].append({
+#             'appointment': appointment,
+#             'prescription': prescription,
+#             'medicines': prescription.medicines.all() if prescription else [],
+#         })
+
+#     # ✅ Remove patients without any completed appointments
+#     patient_data = {p: r for p, r in patient_data.items() if r}
+
+#     return render(request, 'doctor/doctor_patients.html', {
+#         'doctor': doctor,
+#         'patient_data': patient_data,
+#         'search_query': search_query,
+#     })
+    
+
+def doctor_patients_view(request, doctor_id):
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    search_query = request.GET.get("search", "").strip()
+
+    # STEP 1: Patients who visited THIS doctor
+    my_patients = Appointment.objects.filter(
+        doctor=doctor,
+        status="completed"
+    ).values_list("user_id", flat=True).distinct()
+
+    # STEP 2: Apply search correctly (fixed Q syntax)
+    if search_query:
+        my_patients = User.objects.filter(
+            Q(id__in=my_patients) &
+            (
+                Q(username__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(phone__icontains=search_query)
+            )
+        ).values_list("id", flat=True)
+
+    # STEP 3: Get ALL completed appointments of these patients
     appointments = (
-        Appointment.objects.filter(doctor=doctor, status='completed')
-        .select_related('user')
-        .prefetch_related('prescription__medicines')
-        .order_by('-date')
+        Appointment.objects.filter(
+            user_id__in=my_patients,
+            status="completed"
+        )
+        .select_related("user", "doctor")
+        .prefetch_related("prescription__medicines")
+        .order_by("-date")
     )
 
-    # ✅ Apply search filter (by patient name, email, or phone)
-    if search_query:
-        appointments = appointments.filter(
-            Q(user__username__icontains=search_query) |
-            Q(user__email__icontains=search_query) |
-            Q(user__phone__icontains=search_query)
-        )
-
-    # ✅ Group data by patient
+    # STEP 4: Group by patients
     patient_data = {}
-    for appointment in appointments:
-        patient = appointment.user
+    for appt in appointments:
+        patient = appt.user
         if patient not in patient_data:
             patient_data[patient] = []
-        prescription = getattr(appointment, 'prescription', None)
+
+        prescription = getattr(appt, "prescription", None)
+
         patient_data[patient].append({
-            'appointment': appointment,
-            'prescription': prescription,
-            'medicines': prescription.medicines.all() if prescription else [],
+            "appointment": appt,
+            "prescription": prescription,
+            "medicines": prescription.medicines.all() if prescription else [],
+            "doctor": appt.doctor,  # Important: show which doctor treated
         })
 
-    # ✅ Remove patients without any completed appointments
-    patient_data = {p: r for p, r in patient_data.items() if r}
-
-    return render(request, 'doctor/doctor_patients.html', {
-        'doctor': doctor,
-        'patient_data': patient_data,
-        'search_query': search_query,
+    return render(request, "doctor/doctor_patients.html", {
+        "doctor": doctor,
+        "patient_data": patient_data,
+        "search_query": search_query,
     })
-    
-    
+
 def doctor_feedback_view(request, doctor_id):
     """
     Display all feedbacks given to a specific doctor

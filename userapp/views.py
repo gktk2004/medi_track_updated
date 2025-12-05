@@ -515,6 +515,23 @@ class UserAppointmentListView(APIView):
         }, status=status.HTTP_200_OK)
         
         
+# class AppointmentDetailView(APIView):
+#     def get(self, request):
+#         appointment_id = request.query_params.get('appointment_id')
+
+#         if not appointment_id:
+#             return Response(
+#                 {"success": False, "message": "appointment_id parameter is required."},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+
+#         appointment = get_object_or_404(Appointment, id=appointment_id)
+#         serializer = AppointmentDetailSerializer(appointment)
+
+#         return Response({
+#             "success": True,
+#             "appointment": serializer.data
+#         }, status=status.HTTP_200_OK)
 class AppointmentDetailView(APIView):
     def get(self, request):
         appointment_id = request.query_params.get('appointment_id')
@@ -526,12 +543,18 @@ class AppointmentDetailView(APIView):
             )
 
         appointment = get_object_or_404(Appointment, id=appointment_id)
+
+        # ⭐ Check if feedback exists
+        has_feedback = Feedback.objects.filter(appointment=appointment).exists()
+
         serializer = AppointmentDetailSerializer(appointment)
 
         return Response({
             "success": True,
+            "has_feedback": has_feedback,
             "appointment": serializer.data
         }, status=status.HTTP_200_OK)
+
         
 class CancelAppointmentView(APIView):
     def patch(self, request):
@@ -885,8 +908,8 @@ class BookingConfirmationView(APIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
-    
-    
+
+
 class AcceptRescheduleAPIView(APIView):
 
     def patch(self, request):
@@ -908,7 +931,7 @@ class AcceptRescheduleAPIView(APIView):
             )
 
         today = timezone.localdate()
-        cutoff = appt.rescheduled_date - datetime.timedelta(days=1)
+        cutoff = appt.rescheduled_date - timedelta(days=1)  # <-- FIXED
 
         if today > cutoff:
             appt.status = "cancelled"
@@ -919,25 +942,19 @@ class AcceptRescheduleAPIView(APIView):
                 status=http_status.HTTP_400_BAD_REQUEST,
             )
 
-        # ==========================================================
-        # CORRECT TOKEN CALCULATION (EXCLUDE THIS APPOINTMENT)
-        # ==========================================================
         new_date = appt.rescheduled_date
         doctor = appt.doctor
 
         existing_appts = Appointment.objects.filter(
             doctor=doctor,
             date=new_date
-        ).exclude(id=appt.id)  # <-- IMPORTANT FIX!
+        ).exclude(id=appt.id)
 
         if existing_appts.exists():
             new_token = existing_appts.count() + 1
         else:
-            new_token = 1   # If no appointment on that date → token 1
+            new_token = 1
 
-        # ==========================================================
-        # ACCEPT RESCHEDULE
-        # ==========================================================
         appt.date = new_date
         appt.rescheduled_date = None
         appt.status = "upcoming"
@@ -955,6 +972,7 @@ class AcceptRescheduleAPIView(APIView):
             },
             status=http_status.HTTP_200_OK,
         )
+
         
 class RejectRescheduleAPIView(APIView):
 
@@ -1334,4 +1352,138 @@ class DonorDonationHistoryView(APIView):
 
         return Response(data, status=200)
     
-    
+from django.utils.timezone import now
+
+class DoctorCurrentTokenView(APIView):
+    def get(self, request):
+
+        doctor_id = request.query_params.get("doctor_id")
+
+        if not doctor_id:
+            return Response({
+                "status": "error",
+                "message": "doctor_id is required"
+            }, status=400)
+
+        try:
+            doctor = Doctor.objects.get(id=doctor_id)
+        except Doctor.DoesNotExist:
+            return Response({"status": "error", "message": "Doctor not found"}, status=404)
+
+        today = now().date()
+
+        # Valid today's appointments
+        appointments = Appointment.objects.filter(
+            doctor=doctor,
+            date=today,
+            payment_status="completed"
+        ).exclude(
+            status__in=["cancelled", "rescheduled", "completed"]
+        ).order_by("token_number")
+
+        if not appointments.exists():
+            return Response({
+                "status": "success",
+                "current_token": None,
+                "next_token": None,
+                "total_tokens": 0
+            })
+
+        # ----- FIX: treat 'upcoming' as waiting -----
+        current_app = (
+            appointments.filter(status="in_progress").first()
+            or appointments.filter(status__in=["waiting", "upcoming"]).first()
+        )
+
+        # Next token
+        next_app = None
+        if current_app:
+            next_app = appointments.filter(
+                token_number__gt=current_app.token_number,
+                status__in=["waiting", "upcoming"]
+            ).first()
+
+        return Response({
+            "status": "success",
+            "doctor": doctor.name,
+            "current_token": {
+                "token_number": current_app.token_number if current_app else None,
+                "patient_name": current_app.user.username if current_app else None,
+                "appointment_id": current_app.id if current_app else None,
+            },
+            "next_token": {
+                "token_number": next_app.token_number if next_app else None,
+                "patient_name": next_app.user.username if next_app else None,
+                "appointment_id": next_app.id if next_app else None,
+            },
+            "total_tokens": appointments.count()
+        })
+
+
+class AppointmentPrescriptionStatusView(APIView):
+    def get(self, request):
+        appointment_id = request.query_params.get("appointment_id")
+
+        if not appointment_id:
+            return Response(
+                {"success": False, "message": "appointment_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Get appointment
+        try:
+            appointment = Appointment.objects.get(id=appointment_id)
+        except Appointment.DoesNotExist:
+            return Response(
+                {"success": False, "message": "Invalid appointment ID"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # ❌ If prescription does NOT exist → return error
+        if not hasattr(appointment, "prescription"):
+            return Response({
+                "success": False,
+                "message": "Prescription not available. Appointment not completed.",
+                "appointment": {
+                    "id": appointment.id,
+                    "doctor_name": appointment.doctor.name,
+                    "user_name": appointment.user.username,
+                    "date": appointment.date,
+                    "status": appointment.status
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ If prescription exists → return completed info
+        prescription = appointment.prescription
+        medicines = prescription.medicines.all()
+
+        med_list = [
+            {
+                "name": m.name,
+                "dosage": m.dosage,
+                "frequency": m.frequency,
+                "time_of_day": m.time_of_day,
+                "food_instruction": m.food_instruction,
+                "number_of_days": m.number_of_days
+            }
+            for m in medicines
+        ]
+
+        return Response({
+            "success": True,
+            "completed": True,
+            "message": "Appointment is completed. Prescription available.",
+            "appointment": {
+                "id": appointment.id,
+                "doctor_name": appointment.doctor.name,
+                "user_name": appointment.user.username,
+                "date": appointment.date,
+                "status": appointment.status,
+            },
+            "prescription": {
+                "symptoms": prescription.symptoms,
+                "notes": prescription.notes,
+                "created_at": prescription.created_at,
+                "medicines": med_list
+            }
+        }, status=status.HTTP_200_OK)

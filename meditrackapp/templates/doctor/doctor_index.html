@@ -137,6 +137,7 @@
       <ul class="navbar-nav">
         <li class="nav-item"><a class="nav-link active" href="{% url 'doctor_index' %}">Home</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'doctor_profile' %}">Profile</a></li>
+        <!-- <li class="nav-item"><a class="nav-link" href="{% url 'ongoing_appointments' %}">Upcoming Appointments</a></li> -->
         <li class="nav-item"><a class="nav-link" href="/meditrack/doctor/{{ doctor.id }}/patients/">Medical History</a></li>
         <li class="nav-item"><a class="nav-link" href="/meditrack/doctor/{{ doctor.id }}/feedback/">Feedback</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'doctor_reschedule_request' %}">Emergency Reschedule</a></li>
@@ -174,9 +175,28 @@
     <div class="col-md-4">
       <div class="dash-card">
         <i class="fa-solid fa-calendar-check"></i>
+        <h4>Ongoing Appointments</h4>
+        <p>View your Ongoing Appointments.</p>
+        <a href="{% url 'ongoing_appointments' %}" class="btn btn-custom w-100"> Ongoing Appointments</a>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="dash-card">
+        <i class="fa-solid fa-calendar-check"></i>
         <h4>Upcoming Appointments</h4>
         <p>View your upcoming patient visits.</p>
-        <a href="{% url 'upcoming_appointments' %}" class="btn btn-custom w-100">View Appointments</a>
+        <a href="{% url 'upcoming_appointments' doctor.id %}" class="btn btn-custom w-100"> Upcoming Appointments</a>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="dash-card">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <h4>Appointment History</h4>
+          <p>View all past appointments and records.</p>
+          <a href="/meditrack/doctor/{{ doctor.id }}/appointment-history/" 
+            class="btn btn-custom w-100">
+            View History
+          </a>
       </div>
     </div>
 

@@ -26,7 +26,7 @@ class Appointment(models.Model):
         ('upcoming', 'Upcoming'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
-        ('rescheduled', 'Rescheduled'),
+        ('rescheduled', 'Rescheduled'), 
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='appointments')

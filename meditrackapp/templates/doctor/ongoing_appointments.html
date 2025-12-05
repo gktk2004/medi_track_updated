@@ -62,7 +62,7 @@
   }
 </style>
 
-<h2>Upcoming Appointments for Dr. {{ doctor.name }}</h2>
+<h2>Ongoing Appointments for Dr. {{ doctor.name }}</h2>
 
 {% if appointments %}
   <table>
@@ -90,7 +90,7 @@
     </tbody>
   </table>
 {% else %}
-  <p>No upcoming appointments found.</p>
+  <p>No Ongoing appointments found.</p>
 {% endif %}
 
 {% endblock %}

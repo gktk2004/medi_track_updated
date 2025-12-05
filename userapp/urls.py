@@ -67,4 +67,6 @@ urlpatterns = [
     path("blood_requests/", BloodRequestsForDonorView.as_view(), name="donor_blood_requests"),
     path("all_blood_requests/", CommonBloodRequestListView.as_view(), name="common_blood_requests"),
     path("donor_history/", DonorDonationHistoryView.as_view(), name="donor_donation_history"),
+    path("token_status/", DoctorCurrentTokenView.as_view(), name="doctor_token_status"),
+    path("appointment_prescription/", AppointmentPrescriptionStatusView.as_view()),
 ]
