@@ -1,0 +1,186 @@
+{% extends 'admin/admin_index.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    body {
+        background: #f5f2fa;
+    }
+
+    /* PAGE TITLE */
+    .page-title {
+        text-align: center;
+        font-weight: 900;
+        color: #300a4f;
+        margin: 30px 0;
+    }
+
+    /* INFO CARD */
+    .info-card {
+        background: #ffffff;
+        padding: 28px;
+        border-radius: 18px;
+        text-align: center;
+        box-shadow: 0 6px 16px rgba(48,10,79,0.15);
+        transition: .3s ease;
+    }
+
+    .info-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 10px 22px rgba(48,10,79,0.2);
+    }
+
+    .info-number {
+        font-size: 2.6rem;
+        font-weight: 800;
+        color: #300a4f;
+    }
+
+    .info-title {
+        font-size: 1rem;
+        margin-top: 6px;
+        font-weight: 600;
+        color: #6b5a82;
+        letter-spacing: 0.5px;
+    }
+
+    /* TABLE */
+    .custom-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 14px;
+        margin-top: 30px;
+    }
+
+    .custom-table thead th {
+        background: #300a4f;
+        color: white;
+        padding: 14px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .custom-table thead th:first-child {
+        border-radius: 10px 0 0 0;
+    }
+
+    .custom-table thead th:last-child {
+        border-radius: 0 10px 0 0;
+    }
+
+    .custom-table tbody tr {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 14px rgba(48,10,79,0.12);
+        transition: .25s ease;
+    }
+
+    .custom-table tbody tr:hover {
+        background: #f0e7ff;
+        transform: scale(1.005);
+    }
+
+    .custom-table td {
+        padding: 15px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .description-cell {
+        max-width: 320px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
+
+<div class="container py-4">
+
+    <!-- TITLE -->
+    <h2 class="page-title">Complaints</h2>
+
+    <!-- TOTAL COMPLAINTS CARD -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-4 col-sm-8">
+            <div class="info-card">
+                <div class="info-number">{{ total_complaints }}</div>
+                <div class="info-title">TOTAL COMPLAINTS</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPLAINTS TABLE -->
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>User</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Images</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for c in complaints %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ c.user.username }}</td>
+                <td>{{ c.category }}</td>
+                <td class="description-cell">
+                    {{ c.description }}
+                </td>
+                <td>
+                    {% if c.images.count > 0 %}
+                        <button class="btn btn-sm btn-outline-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#imagesModal{{ c.id }}">
+                            View ({{ c.images.count }})
+                        </button>
+                    {% else %}
+                        <span class="text-muted">No Images</span>
+                    {% endif %}
+                </td>
+                <td>{{ c.created_at|date:"Y-m-d" }}</td>
+            </tr>
+
+            <!-- IMAGE MODAL -->
+            <div class="modal fade" id="imagesModal{{ c.id }}" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                Complaint Images – {{ c.user.username }}
+                            </h5>
+                            <button type="button" class="btn-close"
+                                    data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                {% for img in c.images.all %}
+                                <div class="col-md-4">
+                                    <img src="{{ img.image.url }}"
+                                         class="img-fluid rounded shadow-sm"
+                                         alt="Complaint Image">
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <tr>
+                <td colspan="6">No complaints found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}

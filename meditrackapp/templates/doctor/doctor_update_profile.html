@@ -1,0 +1,117 @@
+{% extends 'doctor/doctor_index.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  /* ✅ Custom Theme Styling */
+  .text-primary {
+    color: #0077b6 !important;
+  }
+  .btn-primary {
+    background-color: #0077b6 !important;
+    border-color: #0077b6 !important;
+  }
+  .btn-primary:hover {
+    background-color: #005f8a !important;
+    border-color: #005f8a !important;
+  }
+  .form-label {
+    color: #0077b6;
+  }
+  .border-theme {
+    border-color: #0077b6 !important;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: #0077b6 !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 119, 182, 0.25) !important;
+  }
+
+  /* ✅ Smooth fade-out animation for alerts */
+  .alert.fade-out {
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+  }
+</style>
+
+<div class="container py-5" style="max-width: 700px;">
+  <h2 class="text-center mb-4 text-primary fw-bold">Update Profile</h2>
+
+  <!-- ✅ Django Messages -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-theme">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data" class="shadow p-4 rounded bg-white border border-theme">
+    {% csrf_token %}
+
+    <!-- Qualification -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Qualification</label>
+      <input type="text" name="qualification" class="form-control" value="{{ doctor.qualification }}">
+    </div>
+
+    <!-- Experience -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Experience</label>
+      <input type="text" name="experience" class="form-control" value="{{ doctor.experience }}">
+    </div>
+
+    <!-- Profile Image -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Profile Image</label>
+      <input type="file" name="image" class="form-control">
+      {% if doctor.image %}
+        <img src="{{ doctor.image.url }}" width="120" class="mt-3 rounded-circle border border-3 border-theme shadow-sm">
+      {% endif %}
+    </div>
+
+    <!-- ID Image -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold">ID Image</label>
+      <input type="file" name="id_image" class="form-control">
+      {% if doctor.id_image %}
+        <img src="{{ doctor.id_image.url }}" width="120" class="mt-3 rounded-3 border border-3 border-theme shadow-sm">
+      {% endif %}
+    </div>
+
+    <!-- ✅ Working Days -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold d-block mb-2">Select Working Days</label>
+      <div class="border rounded p-3 bg-light border-theme">
+        {% for value, label in doctor.DAYS_OF_WEEK %}
+          <div class="form-check form-check-inline mb-2">
+            <input 
+              class="form-check-input border-theme" 
+              type="checkbox" 
+              name="working_days" 
+              value="{{ value }}"
+              {% if value in doctor.working_days %}checked{% endif %}
+            >
+            <label class="form-check-label">{{ label }}</label>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-primary px-5 py-2 fw-semibold">Update Profile</button>
+    </div>
+  </form>
+</div>
+
+<!-- ✅ Auto-hide messages after 5 seconds -->
+<script>
+  setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(alert => {
+      alert.classList.add('fade-out');
+      setTimeout(() => alert.remove(), 500); // Remove after fade animation
+    });
+  }, 5000); // 5 seconds
+</script>
+{% endblock %}

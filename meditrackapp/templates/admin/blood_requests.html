@@ -1,0 +1,185 @@
+{% extends 'admin/admin_index.html' %}
+
+{% block content %}
+
+<style>
+    .page-title {
+        font-weight: 700;
+        color: #2a0945;
+        text-align: center;
+        margin-top: 40px;
+        margin-bottom: 25px;
+    }
+
+    .blood-table-container {
+        background: #fff;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(73, 10, 98, 0.08);
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    table {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    /* Header */
+    thead.table-dark {
+        background-color: #2a0945 !important;
+        color: #ffffff !important;
+    }
+
+    thead.table-dark th {
+        background-color: #2a0945 !important;
+        color: #ffffff !important;
+        border-color: #2a0945 !important;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        padding: 12px;
+    }
+
+    /* Row styling */
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #f2eaff !important;
+    }
+
+    .table-striped tbody tr:hover {
+        background-color: #e4d4ff !important;
+        transition: 0.2s;
+    }
+
+    .badge {
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .badge-pending {
+        background-color: #f7d774;
+        color: #2a0945;
+    }
+
+    .badge-approved {
+        background-color: #2a0945;
+        color: white;
+    }
+
+    .badge-rejected {
+        background-color: #c1121f;
+        color: white;
+    }
+
+    .btn-action {
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-weight: 600;
+        color: #fff !important;
+        border: none;
+    }
+
+    .btn-approve {
+        background-color: #2a0945 !important;
+    }
+
+    .btn-reject {
+        background-color: #c1121f !important;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+
+<div class="container">
+
+    <h2 class="page-title">Blood Requests</h2>
+
+    <div class="blood-table-container">
+
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Doctor</th>
+                    <th>Blood</th>
+                    <th>Units</th>
+                    <th>Donation Type</th>
+                    <th>Donation Date</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Reason</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td>{{ req.id }}</td>
+                    <td>{{ req.doctor.name }}</td>
+                    <td><strong>{{ req.blood_group }}</strong></td>
+                    <td>{{ req.units_required }}</td>
+
+                    <!-- Donation Type -->
+                    <td>{{ req.donation_type }}</td>
+
+                    <!-- Donation Date -->
+                    <td>
+                        {% if req.donation_date %}
+                            {{ req.donation_date|date:"d M Y" }}
+                        {% else %}
+                            <span class="text-muted">Not specified</span>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ req.location }}</td>
+
+                    <!-- Status Badge -->
+                    <td>
+                        {% if req.status == "pending" %}
+                            <span class="badge badge-pending">Pending</span>
+                        {% elif req.status == "approved" %}
+                            <span class="badge badge-approved">Approved</span>
+                        {% elif req.status == "rejected" %}
+                            <span class="badge badge-rejected">Rejected</span>
+                        {% endif %}
+                    </td>
+
+                    <td style="max-width: 250px;">{{ req.reason }}</td>
+
+                    <!-- Action Column -->
+                    <td>
+                        {% if req.status == "pending" %}
+                            <a href="{% url 'admin_approve_blood_request' req.id %}"
+                               class="btn-action btn-approve btn-sm">
+                                Approve
+                            </a>
+                            <a href="{% url 'admin_reject_blood_request' req.id %}"
+                               class="btn-action btn-reject btn-sm">
+                                Reject
+                            </a>
+
+                        {% elif req.status == "approved" %}
+                            <a href="{% url 'admin_view_accepted_donors' req.id %}"
+                               class="btn-action btn-approve btn-sm">
+                                View Accepted Donors
+                            </a>
+
+                        {% else %}
+                            <span class="text-muted">Completed</span>
+                        {% endif %}
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+{% endblock %}

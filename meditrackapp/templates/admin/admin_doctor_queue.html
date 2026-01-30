@@ -1,0 +1,171 @@
+{% extends 'admin/admin_index.html' %}
+{% block content %}
+
+<style>
+
+    /* Container */
+    .queue-wrapper {
+        max-width: 1000px;
+        margin: auto;
+        margin-top: 40px;
+        padding: 25px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 8px 25px rgba(48, 10, 79, 0.15);
+        backdrop-filter: blur(6px);
+    }
+
+    /* Header */
+    .doctor-header {
+        background: linear-gradient(135deg, #300a4f, #4c167a);
+        color: white;
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 25px;
+    }
+
+    .doctor-header h2 {
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .doctor-header p {
+        font-size: 1rem;
+        opacity: 0.8;
+    }
+
+    /* Table */
+    .queue-table {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .queue-table thead {
+        background-color: #300a4f;
+        color: white;
+    }
+
+    .queue-table th {
+        padding: 12px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border: none !important;
+    }
+
+    .queue-table tbody tr:nth-child(even) {
+        background: #f7f0fb;
+    }
+
+    .queue-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e7daf3;
+        vertical-align: middle;
+    }
+
+    .queue-table tr:hover {
+        background: #eee1ff;
+        cursor: pointer;
+    }
+
+    /* Status Badges */
+    .badge-pill {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 25px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: white;
+    }
+
+    .badge-running { background-color: #12a84c; }
+    .badge-waiting { background-color: #300a4f; }
+    .badge-completed { background-color: #6c757d; }
+
+    /* Payment Badges */
+    .badge-paid { background-color: #12a84c; }
+    .badge-unpaid { background-color: #d90429; }
+
+    /* Back Button */
+    .btn-back {
+        background-color: #300a4f;
+        color: white;
+        border-radius: 8px;
+        padding: 8px 18px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-top: 20px;
+        transition: 0.2s ease;
+        text-decoration: none;
+    }
+
+    .btn-back:hover {
+        background-color: #210636;
+        color: #fff;
+    }
+
+</style>
+
+<div class="queue-wrapper">
+
+    <!-- DOCTOR HEADER -->
+    <div class="doctor-header">
+        <h2>Queue for Dr. {{ doctor.name }}</h2>
+        <p>{{ doctor.specialization.department }}</p>
+    </div>
+
+    <!-- TABLE -->
+    <div class="queue-table">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Token</th>
+                    <th>Patient</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for a in appointments %}
+                <tr>
+                    <td>{{ a.token_number }}</td>
+                    <td>{{ a.user.username }}</td>
+
+                    <!-- Appointment Status -->
+                    <td>
+                        {% if a.status == "running" %}
+                            <span class="badge-pill badge-running">Running</span>
+                        {% elif a.status == "completed" %}
+                            <span class="badge-pill badge-completed">Completed</span>
+                        {% else %}
+                            <span class="badge-pill badge-waiting">Waiting</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Payment -->
+                    <td>
+                        {% if a.payment_status == "completed" %}
+                            <span class="badge-pill badge-paid">Completed</span>
+                        {% else %}
+                            <span class="badge-pill badge-unpaid">Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-3 text-muted">
+                        No appointments today
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div><BR>
+
+    <!-- BACK BUTTON -->
+    <a href="{% url 'admin_token_status' %}" class="btn-back">← Back</a>
+
+</div>
+
+{% endblock %}
