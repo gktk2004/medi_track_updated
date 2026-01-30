@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MediTrack Appointment Confirmation</title>
+  <style>
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    .email-wrapper {
+      width: 100%;
+      padding: 20px 0;
+    }
+
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .email-header {
+      background-color: #457B9D;
+      color: #ffffff;
+      text-align: center;
+      padding: 25px 15px;
+    }
+
+    .email-header h1 {
+      font-size: 26px;
+      margin: 0;
+      letter-spacing: 1px;
+    }
+
+    .email-body {
+      padding: 30px 25px;
+      line-height: 1.7;
+    }
+
+    .email-body h2 {
+      color: #457B9D;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .details-box {
+      background: #f0faff;
+      border-left: 5px solid #457B9D;
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+    }
+
+    .details-box p {
+      margin: 8px 0;
+      font-size: 15px;
+    }
+
+    .token {
+      display: inline-block;
+      background: #457B9D;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .footer {
+      background-color: #f0f0f0;
+      text-align: center;
+      font-size: 13px;
+      color: #555;
+      padding: 15px;
+    }
+
+    .footer a {
+      color: #457B9D;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background-color: #457B9D;
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-size: 15px;
+    }
+
+    .cta-button:hover {
+      background-color: #3A6682;
+    }
+
+    @media (max-width: 600px) {
+      .email-body { padding: 20px; }
+      .email-header h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
+
+      <!-- Header -->
+      <div class="email-header">
+        <h1>MediTrack Appointment</h1>
+        <p>Your healthcare, simplified 💙</p>
+      </div>
+
+      <!-- Body -->
+      <div class="email-body">
+        <h2>Hello {{ user.username }},</h2>
+        <p>
+          Your appointment with <strong>Dr. {{ doctor.name }}</strong> has been confirmed for today.
+          Below are your appointment details:
+        </p>
+
+        <div class="details-box">
+          <p><strong>Date:</strong> {{ appointment.date }}</p>
+          <p><strong>Token Number:</strong> <span class="token">{{ token_number }}</span></p>
+          <p><strong>Expected Time:</strong> {{ expected_time }}</p>
+          <p><strong>Department:</strong> {{ doctor.specialization.department|default:"General" }}</p>
+        </div>
+
+        <p>Please arrive at the hospital on time. We look forward to providing you with the best care possible.</p>
+
+        <!-- <a href="#" class="cta-button">View Appointment</a> -->
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>© 2025 <strong>MediTrack</strong>. All Rights Reserved.</p>
+        <p>
+          This is an automated notification — please do not reply.<br>
+          Need help? <a href="mailto:support@meditrack.com">Contact Support</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

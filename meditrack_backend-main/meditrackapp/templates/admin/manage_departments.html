@@ -1,0 +1,116 @@
+{% extends 'admin/admin_index.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="card shadow-lg p-4 rounded-4 border-0" style="max-width: 700px; margin: auto;">
+    <h2 class="text-center fw-bold mb-4" style="color: #300a4f;">Manage Departments</h2>
+
+    <!-- Add Department Form -->
+    <form method="POST" action="{% url 'add_department' %}" class="d-flex justify-content-center mb-4">
+      {% csrf_token %}
+      <input 
+        type="text" 
+        name="department" 
+        placeholder="Enter Department Name"
+        class="form-control me-2 rounded-pill border-2" 
+        style="border-color: #300a4f;" 
+        required
+      >
+      <button type="submit" class="btn rounded-pill px-4 fw-semibold" style="background-color: #300a4f; color: #fff;">
+           Add
+      </button>
+    </form>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} text-center py-2 mb-2 border-start border-4 fade show"
+             style="border-color: #300a4f !important; transition: opacity 0.5s ease-out;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Department List -->
+    <div class="table-responsive">
+      <table class="table align-middle text-center shadow-sm">
+        <thead style="background-color: #300a4f; color: white;">
+          <tr>
+            <th>#</th>
+            <th>Department Name</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dept in departments %}
+          <tr>
+            <td class="fw-semibold">{{ forloop.counter }}</td>
+            <td>{{ dept.department }}</td>
+            <td>
+              <a href="{% url 'delete_department' dept.id %}" 
+                 class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                 onclick="return confirm('Are you sure you want to delete this department?');">
+                 🗑 Delete
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="text-muted py-3">No departments added yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<style>
+  body {
+    background: #f5f9fc;
+  }
+
+  .card {
+    background-color: #ffffff;
+  }
+
+  .form-control:focus {
+    border-color: #0077b6 !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 119, 182, 0.25);
+  }
+
+  .btn:hover {
+    opacity: 0.9;
+  }
+
+  table td, table th {
+    vertical-align: middle;
+  }
+
+  .table thead th {
+    border-bottom: none;
+  }
+
+  /* Smooth fade-out animation for alerts */
+  .alert.fade-out {
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+  }
+</style>
+
+<!-- Auto-hide messages after 5 seconds -->
+<script>
+  setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(alert => {
+      alert.classList.add('fade-out');
+      setTimeout(() => alert.remove(), 500); // Remove after fade-out
+    });
+  }, 2000); // 2 seconds
+</script>
+
+{% endblock %}

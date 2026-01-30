@@ -1,0 +1,195 @@
+{% extends 'doctor/doctor_index.html' %}
+{% block content %}
+
+<style>
+    body {
+        background-color: #f0f6ff !important;
+        font-family: "Poppins", sans-serif;
+    }
+
+    .page-title {
+        text-align: center;
+        font-weight: 800;
+        font-size: 2rem;
+        color: #1D3557;
+        margin-top: 35px;
+        margin-bottom: 20px;
+    }
+
+    /* Search / Filter Box */
+    .filter-box {
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+        max-width: 900px;
+        margin: auto;
+    }
+
+    .btn-search {
+        background: #457B9D;
+        color: white;
+        border-radius: 12px;
+        padding: 10px 22px;
+        font-weight: 600;
+        border: none;
+    }
+
+    .btn-search:hover {
+        background: #3A6682;
+    }
+
+    /* Table Container */
+    .history-table-card {
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        margin-top: 30px;
+    }
+
+    table thead th {
+        background: linear-gradient(135deg, #3A6682, #457B9D);
+        color: white;
+        text-align: center;
+        padding: 14px;
+    }
+
+    table tbody td {
+        text-align: center;
+        padding: 14px;
+        background: white !important;
+        border-color: #dce7f5;
+    }
+
+    table tbody tr:hover td {
+        background: #e7f2ff !important;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 6px 14px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .completed {
+        background: #d1ffd6;
+        color: #087f23;
+    }
+
+    .cancelled {
+        background: #ffd1d1;
+        color: #c62828;
+    }
+
+    .rescheduled {
+        background: #fff3cd;
+        color: #856404;
+    }
+</style>
+
+<div class="container py-4">
+
+    <h2 class="page-title">Appointment History</h2>
+
+    <!-- Search / Filter Section -->
+    <form method="get" class="filter-box mb-4">
+        <div class="row g-3">
+
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control"
+                       placeholder="Search by patient name..."
+                       value="{{ request.GET.search }}">
+            </div>
+
+            <div class="col-md-3">
+                <input type="date" name="date" class="form-control"
+                       value="{{ request.GET.date }}">
+            </div>
+
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    <option value="rescheduled" {% if request.GET.status == 'rescheduled' %}selected{% endif %}>Rescheduled</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button class="btn-search w-100">Search</button>
+            </div>
+
+        </div>
+    </form>
+
+    <!-- Appointment Table -->
+    <div class="history-table-card">
+        {% if appointments %}
+        <table class="table table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Token</th>
+                    <th>Patient</th>
+                    <th>Symptoms</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for appt in appointments %}
+                <tr>
+                    <td>{{ appt.date }}</td>
+
+                    <!-- TOKEN NUMBER -->
+                    <td>
+                        {% if appt.token_number %}
+                            {{ appt.token_number }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <!-- PATIENT NAME -->
+                    <td>{{ appt.user.username }}</td>
+
+                    <!-- SYMPTOMS -->
+                    <td>
+                        {% if appt.symptoms %}
+                            {{ appt.symptoms|truncatechars:25 }}
+                        {% else %}
+                            <span class="text-muted">None</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- STATUS BADGE -->
+                    <td>
+                        {% if appt.status == "completed" %}
+                            <span class="status-badge completed">Completed</span>
+
+                        {% elif appt.status == "cancelled" %}
+                            <span class="status-badge cancelled">Cancelled</span>
+
+                        {% elif appt.status == "rescheduled" %}
+                            <span class="status-badge rescheduled">Rescheduled</span>
+
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% else %}
+        <div class="alert alert-info text-center">No appointment history found.</div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}

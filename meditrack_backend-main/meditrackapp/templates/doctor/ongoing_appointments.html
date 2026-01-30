@@ -1,0 +1,96 @@
+{% extends 'doctor/doctor_index.html' %}
+{% block content %}
+
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f7f9fc;
+  }
+
+  h2 {
+    color: #457B9D;
+    text-align: center;
+    margin: 30px 0;
+    font-weight: 700;
+  }
+
+  table {
+    width: 90%;
+    margin: 0 auto 40px;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  th, td {
+    padding: 14px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+
+  th {
+    background-color: #457B9D;
+    color: white;
+    font-weight: 600;
+  }
+
+  tr:hover {
+    background-color: #f1f9ff;
+  }
+
+  .btn-prescribe {
+    background-color: #457B9D;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.3s;
+  }
+
+  .btn-prescribe:hover {
+    background-color: #3A6682;
+  }
+
+  p {
+    text-align: center;
+    color: #555;
+    margin-top: 30px;
+  }
+</style>
+
+<h2>Ongoing Appointments for Dr. {{ doctor.name }}</h2>
+
+{% if appointments %}
+  <table>
+    <thead>
+      <tr>
+        <th>Patient</th>
+        <th>Date</th>
+        <th>Symptoms</th>
+        <th>Token Number</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for appointment in appointments %}
+      <tr>
+        <td>{{ appointment.user.username }}</td>
+        <td>{{ appointment.date }}</td>
+        <td>{{ appointment.symptoms|default:"—" }}</td>
+        <td>{{ appointment.token_number|default:"N/A" }}</td>
+        <td>
+          <a href="{% url 'add_prescription' appointment.id %}" class="btn-prescribe"> Prescribe</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>No Ongoing appointments found.</p>
+{% endif %}
+
+{% endblock %}

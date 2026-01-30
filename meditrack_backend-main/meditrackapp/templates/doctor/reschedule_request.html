@@ -1,0 +1,122 @@
+{% extends 'doctor/doctor_index.html' %}
+
+{% block content %}
+
+<style>
+    body {
+        background: #f5f6fa !important;
+        /* same as doctor dashboard */
+    }
+
+    /* Page Title */
+    .page-title {
+        text-align: center;
+        font-weight: 800;
+        font-size: 1.8rem;
+        color: #1D3557;
+        /* doctor theme blue */
+        margin-top: 25px;
+        margin-bottom: 20px;
+    }
+
+    /* Form Card */
+    .form-card {
+        background: #ffffff;
+        padding: 28px;
+        border-radius: 15px;
+        max-width: 650px;
+        margin: auto;
+        border-left: 6px solid #457B9D;
+        /* doctor theme blue line */
+        box-shadow: 0 6px 20px rgba(0, 119, 182, 0.15);
+        transition: 0.25s ease;
+    }
+
+    .form-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 119, 182, 0.22);
+    }
+
+    /* Labels */
+    .form-label {
+        font-weight: 600;
+        color: #1D3557;
+        margin-bottom: 6px;
+    }
+
+    /* Inputs & Textarea */
+    .form-control {
+        border-radius: 10px;
+        border: 1px solid #d2e3f3;
+        padding: 10px 12px;
+        transition: 0.2s ease;
+    }
+
+    .form-control:focus {
+        border-color: #457B9D;
+        box-shadow: 0 0 6px rgba(0, 119, 182, 0.35);
+    }
+
+    textarea.form-control {
+        height: 120px;
+        resize: none;
+    }
+
+    /* Submit Button */
+    .btn-submit {
+        background-color: #457B9D;
+        border: none;
+        width: 100%;
+        padding: 12px;
+        margin-top: 25px;
+        border-radius: 10px;
+        font-size: 1rem;
+        color: white;
+        font-weight: 600;
+        transition: 0.25s ease;
+    }
+
+    .btn-submit:hover {
+        background-color: #005f8f;
+        transform: translateY(-3px);
+    }
+</style>
+
+<div class="container py-4">
+
+    <h2 class="page-title">Request Token Reschedule</h2>
+
+    <div class="form-card">
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Select Appointment Date</label>
+                <input type="date" name="appointment_date" class="form-control" required>
+            </div>
+
+            <!-- Token fields removed as per request -->
+
+            <div class="mb-3">
+                <label class="form-label">Section to Reschedule</label>
+                <select name="time_slot" class="form-control" required>
+                    <option value="all_day">Full Day</option>
+                    <option value="morning">Morning (06:00 - 14:00)</option>
+                    <option value="evening">Evening (14:00 - 22:00)</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Reason</label>
+                <textarea name="reason" class="form-control" placeholder="Explain the reason..."></textarea>
+            </div>
+
+            <button class="btn-submit">Submit Request</button>
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

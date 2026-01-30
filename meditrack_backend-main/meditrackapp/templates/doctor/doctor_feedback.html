@@ -1,0 +1,75 @@
+{% extends 'doctor/doctor_index.html' %}
+{% block content %}
+<style>
+  body { background-color: #f7f9fc; }
+  .rating { color: #ffc107; font-size: 1.1rem; }
+</style>
+
+<div class="container py-4">
+  <h3 class="mb-4">Patient Feedback for Dr. {{ doctor.name }}</h3>
+
+  {% if feedback_list %}
+    <div class="row">
+      {% for fb in feedback_list %}
+        <div class="col-md-6 mb-4">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title mb-1">{{ fb.appointment.user.username }}</h5>
+              <p class="text-muted mb-2">{{ fb.appointment.user.email }}</p>
+
+              <div class="rating mb-2">
+                {% for i in "12345"|slice:":fb.star_rating"|make_list %}
+                  ⭐
+                {% endfor %}
+              </div>
+
+              <p class="card-text text-truncate" style="max-width: 90%;">
+                {{ fb.comments|default:"No comments provided" }}
+              </p>
+
+              <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#feedbackModal{{ fb.id }}">
+                View Details
+              </button>
+            </div>
+            <div class="card-footer text-muted small">
+              Appointment #{{ fb.appointment.id }} — {{ fb.appointment.date }}
+              <br>Submitted on {{ fb.created_at|date:"M d, Y h:i A" }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Feedback Modal -->
+        <div class="modal fade" id="feedbackModal{{ fb.id }}" tabindex="-1" aria-labelledby="feedbackModalLabel{{ fb.id }}" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="feedbackModalLabel{{ fb.id }}">
+                  Feedback from {{ fb.appointment.user.username }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <p><strong>Email:</strong> {{ fb.appointment.user.email }}</p>
+                <p><strong>Appointment:</strong> #{{ fb.appointment.id }} — {{ fb.appointment.date }}</p>
+                <p><strong>Overall Rating:</strong> {{ fb.star_rating }} / 5</p>
+                <p><strong>Doctor Interaction:</strong> {{ fb.doctor_interaction_rating }}/5</p>
+                <p><strong>Hospital Services:</strong> {{ fb.hospital_service_rating }}/5</p>
+                <hr>
+                <p><strong>Comments:</strong></p>
+                <p>{{ fb.comments|default:"No comments provided" }}</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info text-center">No feedback received yet.</div>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

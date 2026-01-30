@@ -1,0 +1,220 @@
+{% extends 'admin/admin_index.html' %}
+
+{% block content %}
+
+<style>
+    .page-title {
+        font-weight: 700;
+        color: #2A9D8F;
+        text-align: center;
+        margin-top: 40px;
+        margin-bottom: 25px;
+    }
+
+    .admin-table-container {
+        background: #fff;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(73, 10, 98, 0.08);
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    table {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    /* Header */
+    thead.table-dark {
+        background-color: #2A9D8F !important;
+        color: #ffffff !important;
+    }
+
+    thead.table-dark th {
+        background-color: #2A9D8F !important;
+        color: #ffffff !important;
+        border-color: #2A9D8F !important;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        padding: 12px;
+    }
+
+    /* Row styling */
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #f2eaff !important;
+    }
+
+    .table-striped tbody tr:hover {
+        background-color: #e4d4ff !important;
+        transition: 0.2s;
+    }
+
+    .badge {
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .badge-active {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-inactive {
+        background-color: #c1121f;
+        color: white;
+    }
+
+    .btn-action {
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-weight: 600;
+        color: #fff !important;
+        border: none;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .btn-view {
+        background-color: #2A9D8F !important;
+    }
+
+    .btn-view:hover {
+        background-color: #1f0633 !important;
+    }
+
+    .btn-deactivate {
+        background-color: #c1121f !important;
+    }
+
+    .btn-deactivate:hover {
+        background-color: #9a0d1b !important;
+    }
+
+    .btn-add-admin {
+        background-color: #2A9D8F;
+        color: white !important;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+
+    .btn-add-admin:hover {
+        background-color: #1f0633;
+        box-shadow: 0 4px 12px rgba(42, 9, 69, 0.3);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+
+    .empty-state-icon {
+        font-size: 3em;
+        color: #2A9D8F;
+        margin-bottom: 15px;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="container" style="margin-top: 40px;">
+    <h2 class="page-title">Manage Blood Donation Admins</h2>
+
+    <!-- Display Django Messages -->
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if can_add %}
+    <a href="{% url 'add_blood_donation_admin' %}" class="btn-add-admin">
+        <i class="fa-solid fa-plus"></i> Add New Blood Donation Admin
+    </a>
+    {% else %}
+    <button class="btn-add-admin" disabled style="opacity: 0.6; cursor: not-allowed;"
+        title="Cannot add more admins - Limit reached">
+        <i class="fa-solid fa-ban"></i> Cannot Add Admin (Limit Reached)
+    </button>
+    {% endif %}
+
+
+    <div class="admin-table-container">
+        {% if blood_admins %}
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Hospital Name</th>
+                    <th>Location</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <!-- <th>Actions</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for admin in blood_admins %}
+                <tr>
+                    <td>{{ admin.id }}</td>
+                    <td>{{ admin.username }}</td>
+                    <td>{{ admin.email }}</td>
+                    <td>{{ admin.hospital_name }}</td>
+                    <td>{{ admin.location }}</td>
+                    <td>{{ admin.phone_number }}</td>
+                    <td>
+                        {% if admin.is_active %}
+                        <span class="badge badge-active">Active</span>
+                        {% else %}
+                        <span class="badge badge-inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <!-- Actions commented out until deactivation view is fixed
+                        <td>
+                            {% if admin.is_active %}
+                                <button class="btn-action btn-deactivate" onclick="alert('Deactivation feature coming soon!')">
+                                    <i class="fa-solid fa-ban"></i> Deactivate
+                                </button>
+                            {% else %}
+                                <span style="color: #999; font-size: 0.85rem;">Deactivated</span>
+                            {% endif %}
+                        </td>
+                        -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-inbox"></i></div>
+            <h5>No Blood Donation Admins</h5>
+            <p>No blood donation admins have been created yet. <a href="{% url 'add_blood_donation_admin' %}"
+                    style="color: #2A9D8F; font-weight: 600;">Create one now</a></p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

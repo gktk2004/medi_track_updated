@@ -1,0 +1,258 @@
+{% extends 'doctor/doctor_index.html' %}
+{% block content %}
+
+<style>
+  body {
+    background-color: #eef6fb;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .form-container {
+    width: 85%;
+    max-width: 900px;
+    margin: 40px auto;
+    background: #ffffff;
+    padding: 40px 50px;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 119, 182, 0.15);
+    border-top: 6px solid #457B9D;
+  }
+
+  h2 {
+    color: #457B9D;
+    text-align: center;
+    margin-bottom: 35px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  label {
+    font-weight: 600;
+    color: #1D3557;
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 6px;
+  }
+
+  input, textarea, select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #bcd0e5;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: #457B9D;
+    box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.15);
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  h4 {
+    margin-top: 30px;
+    color: #457B9D;
+    font-size: 18px;
+    font-weight: 600;
+    border-bottom: 2px solid #bcd0e5;
+    padding-bottom: 6px;
+  }
+
+  .medicine-row {
+    background: #f8fcff;
+    padding: 20px 25px;
+    border-radius: 12px;
+    border: 1px solid #d3e8f9;
+    margin-bottom: 18px;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .medicine-row:hover {
+    transform: scale(1.01);
+    box-shadow: 0 4px 10px rgba(0, 119, 182, 0.12);
+  }
+
+  .remove-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+  }
+
+  .remove-btn:hover {
+    background: #b02a37;
+  }
+
+  .time-checkboxes {
+    margin-top: 10px;
+    background: #e8f5ff;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .time-checkboxes label {
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+  }
+
+  .time-checkboxes input[type="checkbox"] {
+    accent-color: #457B9D;
+    margin-right: 6px;
+  }
+
+  .btn-add, .btn-save {
+    background-color: #457B9D;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+
+  .btn-add:hover, .btn-save:hover {
+    background-color: #3A6682;
+    transform: translateY(-2px);
+  }
+
+  .btn-add {
+    display: inline-block;
+    margin-top: 10px;
+  }
+
+  .btn-save {
+    display: block;
+    width: 100%;
+    margin-top: 30px;
+    background: linear-gradient(90deg, #457B9D, #A8DADC);
+  }
+
+  .btn-save:hover {
+    background: linear-gradient(90deg, #3A6682, #457B9D);
+  }
+
+  .divider {
+    border-bottom: 2px dashed #cce5ff;
+    margin: 20px 0;
+  }
+
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .form-container {
+      width: 95%;
+      padding: 25px 20px;
+    }
+    .medicine-row {
+      padding: 15px;
+    }
+  }
+</style>
+
+<div class="form-container">
+  <h2>Add Prescription for {{ appointment.user.username }}</h2>
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <label>Symptoms</label>
+    <textarea name="symptoms" rows="2" placeholder="e.g., Frequent coughing and mild fever for 3 days"></textarea>
+
+    <label>Notes</label>
+    <textarea name="notes" rows="3" placeholder="Additional doctor notes..."></textarea>
+
+    <h4>Medicines</h4>
+    <div id="medicine-list">
+      <div class="medicine-row" data-index="1">
+        <button type="button" class="remove-btn" onclick="removeMedicine(this)">×</button>
+
+        <label>Medicine Name</label>
+        <input type="text" name="medicine_name" placeholder="e.g., Paracetamol 500mg" required>
+
+        <label>Dosage</label>
+        <input type="text" name="dosage" placeholder="1 tablet, 5 ml" required>
+
+        <label>Frequency (times per day)</label>
+        <input type="number" name="frequency" min="1" value="1" required>
+
+        <label>Time of Day</label>
+        <div class="time-checkboxes">
+          <label><input type="checkbox" name="time_of_day_1" value="morning"> Morning</label>
+          <label><input type="checkbox" name="time_of_day_1" value="afternoon"> Afternoon</label>
+          <label><input type="checkbox" name="time_of_day_1" value="evening"> Evening</label>
+          <label><input type="checkbox" name="time_of_day_1" value="night"> Night</label>
+        </div>
+
+        <label>Food Instruction</label>
+        <select name="food_instruction" required>
+          <option value="">-- Select --</option>
+          <option value="before_food">Before Food</option>
+          <option value="after_food">After Food</option>
+        </select>
+
+        <label>Number of Days</label>
+        <input type="number" name="number_of_days" min="1" value="5" required>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <button type="button" class="btn-add" onclick="addMedicine()">+ Add Another Medicine</button>
+    <button type="submit" class="btn-save">Save Prescription</button>
+  </form>
+</div>
+
+<script>
+function addMedicine() {
+  const container = document.getElementById('medicine-list');
+  const rows = container.querySelectorAll('.medicine-row');
+  const clone = rows[0].cloneNode(true);
+  const newIndex = rows.length + 1;
+
+  // ✅ Reset values
+  clone.querySelectorAll('input[type="text"], input[type="number"], textarea, select').forEach(i => i.value = '');
+  clone.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+  // ✅ Update checkbox name attributes
+  clone.setAttribute('data-index', newIndex);
+  clone.querySelectorAll('input[name^="time_of_day_"]').forEach(cb => {
+    cb.name = `time_of_day_${newIndex}`;
+  });
+
+  container.appendChild(clone);
+  clone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// 🗑 Remove a medicine row
+function removeMedicine(button) {
+  const container = document.getElementById('medicine-list');
+  if (container.children.length > 1) {
+    button.closest('.medicine-row').remove();
+  } else {
+    alert("At least one medicine is required.");
+  }
+}
+</script>
+
+{% endblock %}

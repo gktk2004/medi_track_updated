@@ -1,0 +1,23 @@
+def blood_donation_dashboard(request):
+    """Dashboard for logged-in Blood Donation Admins"""
+    if 'blood_admin_id' not in request.session:
+        messages.error(request, "Please login as a Blood Donation Admin first.")
+        return redirect('login')
+    
+    blood_admin = BloodDonationAdmin.objects.get(id=request.session['blood_admin_id'])
+    
+    # Calculate stats for the dashboard
+    total_requests = BloodRequest.objects.count()
+    pending_requests = BloodRequest.objects.filter(status='pending').count()
+    approved_requests = BloodRequest.objects.filter(status='approved').count()
+    completed_donations = BloodRequest.objects.filter(status='completed').count() # Assuming 'completed' status exists or similar logic
+
+    context = {
+        'blood_admin': blood_admin,
+        'total_requests': total_requests,
+        'pending_requests': pending_requests,
+        'approved_requests': approved_requests,
+        'completed_donations': completed_donations
+    }
+    
+    return render(request, 'blood_donation_admin/dashboard.html', context)
