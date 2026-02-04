@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, render,redirect
 from django.contrib import messages
 from .models import *
 from userapp.models import *
-from django.db.models import Q
+from django.db.models import Q, Min, Max
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect

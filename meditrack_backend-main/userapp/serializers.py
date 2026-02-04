@@ -144,13 +144,14 @@ class BloodDonorSerializer(serializers.ModelSerializer):
             "blood_group",
             "location",
             "last_donation_date",
+            "next_donation_date",
             "weight",
             "under_medication",
             "had_recent_illness",
             "illness_details",
             "created_at",
         ]
-        read_only_fields = ["id", "created_at"]
+        read_only_fields = ["id", "created_at", "next_donation_date"]
 
     def validate_last_donation_date(self, value):
         # Must not be in the future
@@ -174,7 +175,6 @@ class BloodDonorSerializer(serializers.ModelSerializer):
         if had_recent and not illness_details:
             raise serializers.ValidationError({"illness_details": "Provide details of recent illness."})
 
-        # If user did not have recent illness but provided details, accept but trim
         return attrs
 
     def create(self, validated_data):
@@ -182,11 +182,33 @@ class BloodDonorSerializer(serializers.ModelSerializer):
 
         # Import your custom user model
         from userapp.models import User
+        from datetime import timedelta
 
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             raise serializers.ValidationError({"user_id": "User does not exist in userapp.User"})
+
+        last_donation_date = validated_data.get("last_donation_date")
+        next_donation_date = date.today()
+
+        if last_donation_date:
+            gender = user.gender.strip().lower()
+            if gender == 'male':
+                # Male: 3 months ~ 90 days gap
+                next_donation_date = last_donation_date + timedelta(days=90)
+            elif gender == 'female':
+                # Female: 4 months ~ 120 days gap
+                next_donation_date = last_donation_date + timedelta(days=120)
+            else:
+                # Default fallback if gender unknown: 3 months
+                next_donation_date = last_donation_date + timedelta(days=90)
+            
+            # If calculated date is in past, they are eligible today
+            if next_donation_date < date.today():
+                 next_donation_date = date.today()
+
+        validated_data['next_donation_date'] = next_donation_date
 
         donor, created = BloodDonor.objects.update_or_create(
             user=user,

@@ -102,6 +102,7 @@ class BloodDonor(models.Model):
     blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES)
     location= models.CharField(max_length=100, choices=Location_Choices)
     last_donation_date = models.DateField(null=True, blank=True)
+    next_donation_date = models.DateField(null=True, blank=True)
     weight = models.DecimalField(max_digits=5, decimal_places=2)  # e.g., 70.50
     under_medication = models.BooleanField(default=False)
     had_recent_illness = models.BooleanField(default=False)

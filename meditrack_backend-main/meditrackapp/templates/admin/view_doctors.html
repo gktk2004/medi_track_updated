@@ -20,7 +20,8 @@
     box-shadow: 0 4px 10px rgba(48, 10, 79, 0.2);
   }
 
-  th, td {
+  th,
+  td {
     padding: 12px 15px;
     text-align: center;
     border-bottom: 1px solid #e8e0f1;
@@ -60,7 +61,8 @@
     cursor: pointer;
   }
 
-  .doctor-image, .id-image {
+  .doctor-image,
+  .id-image {
     width: 55px;
     height: 55px;
     border-radius: 50%;
@@ -126,16 +128,24 @@
 
         <!-- Photo -->
         <td>
+          {% if doctor.image %}
           <button class="btn-img-view" data-bs-toggle="modal" data-bs-target="#profileModal{{ doctor.id }}">
             <img src="{{ doctor.image.url }}" class="doctor-image">
           </button>
+          {% else %}
+          <span class="text-muted">No Photo</span>
+          {% endif %}
         </td>
 
         <!-- ID Image -->
         <td>
+          {% if doctor.id_image %}
           <button class="btn-img-view" data-bs-toggle="modal" data-bs-target="#idModal{{ doctor.id }}">
             <img src="{{ doctor.id_image.url }}" class="id-image">
           </button>
+          {% else %}
+          <span class="text-muted">No ID Image</span>
+          {% endif %}
         </td>
 
         <td>{{ doctor.name }}</td>
@@ -144,7 +154,7 @@
 
         <td>
           {% if doctor.specialization %}
-            {{ doctor.specialization.department }}
+          {{ doctor.specialization.department }}
           {% else %} N/A {% endif %}
         </td>
 
@@ -156,35 +166,36 @@
           {% if doctor.working_days %}
           <div class="working-days">
             {% for day in doctor.working_days %}
-              <span class="day-badge">{{ day }}</span>
+            <span class="day-badge">{{ day }}</span>
             {% endfor %}
           </div>
           {% else %}
-            <span class="text-muted">Not Set</span>
+          <span class="text-muted">Not Set</span>
           {% endif %}
         </td>
 
         <!-- Status -->
         <td>
           {% if doctor.is_approved %}
-            <span style="color: green; font-weight: 600;">Approved</span>
+          <span style="color: green; font-weight: 600;">Approved</span>
           {% else %}
-            <span style="color: orange; font-weight: 600;">Pending</span>
+          <span style="color: orange; font-weight: 600;">Pending</span>
           {% endif %}
         </td>
 
         <!-- Buttons -->
         <td>
           {% if not doctor.is_approved %}
-            <a href="{% url 'approve_doctor' doctor.id %}" class="btn-approve">Approve</a><BR><BR>
-            <a href="{% url 'reject_doctor' doctor.id %}" class="btn-reject ms-2">Reject</a>
+          <a href="{% url 'approve_doctor' doctor.id %}" class="btn-approve">Approve</a><BR><BR>
+          <a href="{% url 'reject_doctor' doctor.id %}" class="btn-reject ms-2">Reject</a>
           {% else %}
-            <span class="text-muted">—</span>
+          <span class="text-muted">—</span>
           {% endif %}
         </td>
       </tr>
 
       <!-- Profile Image Modal -->
+      {% if doctor.image %}
       <div class="modal fade" id="profileModal{{ doctor.id }}">
         <div class="modal-dialog modal-dialog-centered modal-lg">
           <div class="modal-content p-3 text-center">
@@ -192,8 +203,10 @@
           </div>
         </div>
       </div>
+      {% endif %}
 
       <!-- ID Image Modal -->
+      {% if doctor.id_image %}
       <div class="modal fade" id="idModal{{ doctor.id }}">
         <div class="modal-dialog modal-dialog-centered modal-lg">
           <div class="modal-content p-3 text-center">
@@ -201,6 +214,7 @@
           </div>
         </div>
       </div>
+      {% endif %}
 
       {% endfor %}
     </tbody>

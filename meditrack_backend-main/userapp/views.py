@@ -14,6 +14,7 @@ from django.db.models import Max
 from rest_framework import status as http_status
 import datetime 
 from rest_framework.generics import ListAPIView
+from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 
 
 # Create your views here.
@@ -42,32 +43,17 @@ from rest_framework.generics import ListAPIView
 #             return Response(response_data,status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserRegistrationView(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    http_method_names = ['post']
+class UserRegistrationView(APIView):
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
 
-    def create(self, request, *args, **kwargs):
-        if request.content_type.startswith('application/json'):
-            return Response(
-                {"error": "Please upload data as multipart/form-data when including files."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
 
-        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            self.perform_create(serializer)
-            return Response({
-                "status": "success",
-                "message": "User Created Successfully",
-                "data": serializer.data
-            }, status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response({"message": "Registered Successfully"}, status=201)
 
-        return Response({
-            "status": "failed",
-            "message": "Invalid Details",
-            "errors": serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=400)
 
 
 # class LoginView(APIView):
@@ -1356,7 +1342,28 @@ class AddDonationRecordView(APIView):
         )
 
         # -------- Update Donor Last Donation Date --------
+        # -------- Update Donor Last Donation Date --------
         donor.last_donation_date = donation_date
+        
+        # Update next_donation_date based on gender
+        gender = donor.user.gender.strip().lower()
+        if gender == 'male':
+            gap = 90
+        elif gender == 'female':
+            gap = 120
+        else:
+            gap = 90
+            
+        from datetime import timedelta
+        # Ensure donation_date is a date object if it's a string
+        if isinstance(donation_date, str):
+            from datetime import datetime
+            d_date = datetime.strptime(donation_date, "%Y-%m-%d").date()
+        else:
+            d_date = donation_date
+            
+        donor.next_donation_date = d_date + timedelta(days=gap)
+        
         donor.save()
 
         return Response(
@@ -1763,18 +1770,50 @@ class NextDonationDateAPIView(APIView):
 
         donor = get_object_or_404(BloodDonor, id=donor_id)
 
-        # Total donations count
+        # Total donations count from records
         total_donations = DonationRecord.objects.filter(donor=donor).count()
+        
+        # 1. Check if we have an explicit next_donation_date stored (from registration or usage)
+        if donor.next_donation_date:
+            next_date = donor.next_donation_date
+            today = timezone.now().date()
+            eligible = today >= next_date
+            
+            return Response({
+                "donor": donor.user.username,
+                "blood_group": donor.blood_group, 
+                "total_donations": total_donations,
+                "last_donation_date": donor.last_donation_date,  # This might be from reg or updated
+                "next_donation_date": next_date,
+                "eligible": eligible,
+                "message": "Eligible" if eligible else f"Next donation possible on {next_date}"
+            }, status=status.HTTP_200_OK)
 
-        last_donation = (
+        # 2. Fallback: Dynamic calculation if next_donation_date is missing (Legacy)
+        last_donation_record = (
             DonationRecord.objects
             .filter(donor=donor)
             .order_by("-donation_date")
             .first()
         )
+        
+        # Compare record date vs registration date
+        last_date = None
+        donation_type = "Whole Blood" # default
 
-        # No previous donations
-        if not last_donation:
+        if last_donation_record:
+            last_date = last_donation_record.donation_date
+            donation_type = last_donation_record.donation_type
+        
+        # Check registration last_date if explicit record missing or older
+        if donor.last_donation_date:
+             if not last_date or donor.last_donation_date > last_date:
+                 last_date = donor.last_donation_date
+                 # We don't know type from profile, assume Whole Blood default
+                 donation_type = "Whole Blood" 
+
+        # No history at all
+        if not last_date:
             return Response({
                 "donor": donor.user.username,
                 "blood_group": donor.blood_group,
@@ -1784,17 +1823,13 @@ class NextDonationDateAPIView(APIView):
                 "next_donation_date": timezone.now().date()
             }, status=status.HTTP_200_OK)
 
-        donation_type = last_donation.donation_type
-        last_date = last_donation.donation_date
-
-        # Donation intervals (days)
+        # Calculate from determined last_date
         interval_map = {
             "Whole Blood": 56,
             "Red Cells": 112,
             "Plasma": 28,
             "Platelets": 7,
         }
-
         gap_days = interval_map.get(donation_type, 56)
         next_donation_date = last_date + timedelta(days=gap_days)
 
